@@ -22,7 +22,7 @@ def ColumnDensityGen(b_, met, redisProf, element=8, ion=6): #takes in b_ in kpc,
     fOVII = interpolate.interp1d(frac[:,0], frac[:,ion]) #temperature and ion fraction in log10 
     
     radius = np.linspace(b_[0]-0.1, redisProf.unmodified.rCGM*redisProf.unmodified.UNIT_LENGTH/kpc+0.1, 400)
-    _, _, nhot_global, nwarm_global, fvw, fmw, _, _, Tcut = redisProf.ProfileGen(radius)
+    _, _, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, Tcut = redisProf.ProfileGen(radius)
     
     #fvh = 1-fvw
     #fmh = 1-fmw
@@ -35,22 +35,22 @@ def ColumnDensityGen(b_, met, redisProf, element=8, ion=6): #takes in b_ in kpc,
     Tstop  = 7.5
     Temp  = np.logspace(Tstart, Tstop, 400)
     
-    x = np.log(Temp/(unmod_T*np.exp(redisProf.sigH**2/2)))
-    PvhT = np.exp(-x**2/(2*redisProf.sigH**2))/(redisProf.sigH*np.sqrt(2*pi))
-    xp = np.log(Temp/redisProf.TmedVW)
-    PvwT = fvw*np.exp(-xp**2/(2*redisProf.sigW**2))/(redisProf.sigW*np.sqrt(2*pi))
-    PvhT = np.piecewise(PvhT, [Temp>=Tcut,], [lambda xpp:xpp, lambda xpp:0.])
+    xh = np.log(Temp/(unmod_T*np.exp(redisProf.sigH**2/2)))
+    PvhT = np.exp(-xh**2/(2*redisProf.sigH**2))/(redisProf.sigH*np.sqrt(2*pi))
+    xw = np.log(Temp/redisProf.TmedVW)
+    gvwT = fvw*np.exp(-xw**2/(2*redisProf.sigW**2))/(redisProf.sigW*np.sqrt(2*pi))
+    gvhT = np.piecewise(PvhT, [Temp>=Tcut,], [lambda xp:xp, lambda xp:0.])
     
-    PvwT = interpolate.interp1d(np.log10(Temp), PvwT)
-    PvhT = interpolate.interp1d(np.log10(Temp), PvhT)
+    #PvwT = interpolate.interp1d(xw, PvwT)
+    #PvhT = interpolate.interp1d(xh, PvhT)
     
     a0 = 4.9e-4 # Asplund et al. 2009
     
     nOVII = np.zeros_like(radius)
     for indx, r_val in enumerate(radius) :
         nOVII[indx] = a0*met*(mu/muHp)*(
-               nhot_global[indx] *np.trapz(PvhT(np.log10(Temp))*10**fOVII(np.log10(Temp)), np.log10(Temp)) #integrate.quad(lambda T: (10**fOVII(T))*PvhT(T), 4.6, 7.4)[0]  
-             + nwarm_global[indx]*np.trapz(PvwT(np.log10(Temp))*10**fOVII(np.log10(Temp)), np.log10(Temp)) #integrate.quad(lambda T: (10**fOVII(T))*PvwT(T), 4.6, 7.4)[0]
+               nhot_global[indx]  *np.trapz(gvhT*10**fOVII(np.log10( np.exp(xh)*(unmod_T*np.exp(redisProf.sigH**2/2)) )), xh)
+             + nwarm_global[indx] *np.trapz(gvwT*10**fOVII(np.log10( np.exp(xw)*redisProf.TmedVW )), xw) #P(T) dT = g(x w_h) dx w_h
               )
     nOVII = interpolate.interp1d(radius, nOVII, fill_value="extrapolate") #CGS
     

@@ -79,7 +79,7 @@ class IsobarCoolRedistribution:
         nwarm_global = nwarm_local*fvw
         nhot_global  = nhot_local*(1-fvw)
         prs_warm = nwarm_local*kB*self.TmedVW*np.exp(-self.sigW**2/2)
-        prs_hot  = nhot_local*kB*self.TmedVH*np.exp(-self.sigH**2/2)
+        prs_hot  = nhot_local*kB*self.TmedVH*np.exp(-self.sigH**2/2)*((1-fvw)/(1-fmw))
         return (nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, Tcut)
     
     def MassGen(self, radius_): #takes in r in kpc, returns Halo gas mass of each component in CGS
