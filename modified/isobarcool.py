@@ -43,7 +43,7 @@ class IsobarCoolRedistribution:
         LAMBDA = 10**np.loadtxt('hazy_coolingcurve_0.5.txt', skiprows=1)
         LAMBDA = interpolate.interp1d(LAMBDA[:,0], LAMBDA[:,1])
         
-        isobaric = 0
+        isobaric = 1
         tdyn  = np.sqrt(radius**3/(\
                (G*IsobarCoolRedistribution.UNIT_LENGTH**2*IsobarCoolRedistribution.UNIT_DENSITY/IsobarCoolRedistribution.UNIT_VELOCITY**2)\
                    *(self.unmodified.Halo.Mass(radius_)/IsobarCoolRedistribution.UNIT_MASS))) #code
