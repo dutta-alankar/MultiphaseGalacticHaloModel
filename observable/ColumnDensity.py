@@ -22,7 +22,7 @@ def ColumnDensityGen(b_, met, redisProf, element=8, ion=6): #takes in b_ in kpc,
     fOVII = interpolate.interp1d(frac[:,0], frac[:,ion]) #temperature and ion fraction in log10 
     
     radius = np.linspace(b_[0]-0.1, redisProf.unmodified.rCGM*redisProf.unmodified.UNIT_LENGTH/kpc+0.1, 400)
-    _, _, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, Tcut = redisProf.ProfileGen(radius)
+    nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, Tcut = redisProf.ProfileGen(radius)
     
     #fvh = 1-fvw
     #fmh = 1-fmw
@@ -43,14 +43,17 @@ def ColumnDensityGen(b_, met, redisProf, element=8, ion=6): #takes in b_ in kpc,
     
     #PvwT = interpolate.interp1d(xw, PvwT)
     #PvhT = interpolate.interp1d(xh, PvhT)
+    TwM = redisProf.TmedVW*np.exp(-redisProf.sigW**2/2)
+    ThM = redisProf.TmedVH*np.exp(-redisProf.sigH**2/2)*((1-fvw)/(1-fmw))
+    #Assumtion == Phases are internally isobaric
     
     a0 = 4.9e-4 # Asplund et al. 2009
     
     nOVII = np.zeros_like(radius)
     for indx, r_val in enumerate(radius) :
         nOVII[indx] = a0*met*(mu/muHp)*(
-               nhot_global[indx]  *np.trapz(gvhT*10**fOVII(np.log10( np.exp(xh)*(unmod_T*np.exp(redisProf.sigH**2/2)) )), xh)
-             + nwarm_global[indx] *np.trapz(gvwT*10**fOVII(np.log10( np.exp(xw)*redisProf.TmedVW )), xw) #P(T) dT = g(x w_h) dx w_h
+               nhot_global[indx]  *ThM[indx]*np.trapz(gvhT*10**fOVII(np.log10( np.exp(xh)*(unmod_T*np.exp(redisProf.sigH**2/2)) ))/(np.exp(xh)*(unmod_T*np.exp(redisProf.sigH**2/2))), xh)
+             + nwarm_global[indx] *TwM*np.trapz(gvwT*10**fOVII(np.log10( np.exp(xw)*redisProf.TmedVW ))/(np.exp(xw)*redisProf.TmedVW), xw) #P(T) dT = g(x w_h) dx w_h
               )
     nOVII = interpolate.interp1d(radius, nOVII, fill_value="extrapolate") #CGS
     
