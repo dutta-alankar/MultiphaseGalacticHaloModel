@@ -29,19 +29,19 @@ fOVII = interpolate.interp1d(frac[:,0], frac[:,ion]) #temperature and ion fracti
 ion = 8
 fOVIII = interpolate.interp1d(frac[:,0], frac[:,ion]) #temperature and ion fraction in log10 
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-T = np.logspace(4.2,7.2,400)
-plt.loglog(T, 10**fOV(np.log10(T)), label=r'$f_{OV}$' )
-plt.loglog(T, 10**fOVI(np.log10(T)), label=r'$f_{OVI}$' )
-plt.loglog(T, 10**fOVII(np.log10(T)), label=r'$f_{OVII}$' )
-plt.loglog(T, 10**fOVIII(np.log10(T)), label=r'$f_{OVIII}$' )
-plt.grid()
-plt.ylabel(r'Ionization fraction')
-plt.xlabel('Temperature [K]')
-plt.legend(loc='best')
-ax.yaxis.set_ticks_position('both')
-plt.show()
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# T = np.logspace(4.2,7.2,400)
+# plt.loglog(T, 10**fOV(np.log10(T)), label=r'$f_{OV}$' )
+# plt.loglog(T, 10**fOVI(np.log10(T)), label=r'$f_{OVI}$' )
+# plt.loglog(T, 10**fOVII(np.log10(T)), label=r'$f_{OVII}$' )
+# plt.loglog(T, 10**fOVIII(np.log10(T)), label=r'$f_{OVIII}$' )
+# plt.grid()
+# plt.ylabel(r'Ionization fraction')
+# plt.xlabel('Temperature [K]')
+# plt.legend(loc='best')
+# ax.yaxis.set_ticks_position('both')
+# plt.show()
 
 # ____________________________________________________________
 # _________________ Isothermal profile _______________________
@@ -49,7 +49,7 @@ plt.show()
 TmedVH=1.5e6
 TmedVW=3.e5
 sig = 0.3
-cutoff = 10
+cutoff = 8
 THotM = TmedVH*np.exp(-sig**2/2)
 
 unmodified = IsothermalUnmodified(THot=THotM,
@@ -70,45 +70,45 @@ fvh = 1-fvw
 fmh = 1-fmw
 nHwarm = (mu/muHp)*nwarm_local
 
-mod_isochor.PlotDistributionGen(radius[100])
-mod_isochor.PlotDistributionGen(radius[-50])
+mod_isochor.PlotDistributionGen(radius[34])
+#mod_isochor.PlotDistributionGen(radius[-50])
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-plt.semilogy(radius, fvw, label='volme')
-plt.semilogy(radius, fmw, label='mass')
-plt.grid()
-plt.ylabel(r'Warm gas filling factor')
-plt.xlabel('radius [kpc]')
-ax.yaxis.set_ticks_position('both')
-ax.set_xlim(0,250)
-plt.legend(loc='best')
-plt.show()
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# plt.semilogy(radius, fvw, label='volume')
+# plt.semilogy(radius, fmw, label='mass')
+# plt.grid()
+# plt.ylabel(r'Warm gas filling factor')
+# plt.xlabel('radius [kpc]')
+# ax.yaxis.set_ticks_position('both')
+# ax.set_xlim(0,250)
+# plt.legend(loc='best')
+# plt.show()
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-plt.semilogy(radius, nhot_local, label='hot', color='tab:red')
-plt.semilogy(radius, nwarm_local, label='warm', color='tab:blue')
-plt.semilogy(radius, nhot_global, ls = '--', color='tab:red')
-plt.semilogy(radius, nwarm_global, ls = '--', color='tab:blue')
-plt.grid()
-plt.ylabel(r'$\rm <n_{H}(r)>$ [CGS]')
-plt.xlabel('radius [kpc]')
-ax.yaxis.set_ticks_position('both')
-ax.set_xlim(0,250)
-ax.set_ylim(1e-6,1e-2)
-plt.legend(loc='best')
-plt.show()
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# plt.semilogy(radius, nhot_local, label='hot', color='tab:red')
+# plt.semilogy(radius, nwarm_local, label='warm', color='tab:blue')
+# plt.semilogy(radius, nhot_global, ls = '--', color='tab:red')
+# plt.semilogy(radius, nwarm_global, ls = '--', color='tab:blue')
+# plt.grid()
+# plt.ylabel(r'$\rm <n_{H}(r)>$ [CGS]')
+# plt.xlabel('radius [kpc]')
+# ax.yaxis.set_ticks_position('both')
+# ax.set_xlim(0,250)
+# ax.set_ylim(1e-6,1e-2)
+# plt.legend(loc='best')
+# plt.show()
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-plt.semilogy(radius[:-1], MWarm, label='warm', color='tab:blue')
-plt.semilogy(radius[:-1], MHot, label='Hot', color='tab:red')
-plt.grid()
-plt.ylabel(r'$\rm M_{gas} [M_{\odot}]$')
-plt.xlabel('radius [kpc]')
-plt.legend(loc='best')
-plt.show()
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# plt.semilogy(radius[:-1], MWarm, label='warm', color='tab:blue')
+# plt.semilogy(radius[:-1], MHot, label='Hot', color='tab:red')
+# plt.grid()
+# plt.ylabel(r'$\rm M_{gas} [M_{\odot}]$')
+# plt.xlabel('radius [kpc]')
+# plt.legend(loc='best')
+# plt.show()
 
 obsData = np.loadtxt('columndensityData.txt')
 fig = plt.figure()
@@ -127,78 +127,78 @@ plt.show()
 # ____________________________________________________________
 # _________________ Isentropic profile _______________________
 
-TmedVH=1.5e6
-TmedVW=3.e5
-sig = 0.3
-cutoff = 10
-THotM = TmedVH*np.exp(-sig**2/2)
+# TmedVH=1.5e6
+# TmedVW=3.e5
+# sig = 0.3
+# cutoff = 4
+# THotM = TmedVH*np.exp(-sig**2/2)
 
-unmodified = IsentropicUnmodified()
-mod_isochor = IsochorCoolRedistribution(unmodified, TmedVH, TmedVW, sig, cutoff)
+# unmodified = IsentropicUnmodified()
+# mod_isochor = IsochorCoolRedistribution(unmodified, TmedVH, TmedVW, sig, cutoff)
 
-radius = np.linspace(9.0,250,200) #kpc
-nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, _ = mod_isochor.ProfileGen(radius)
-MHot, MWarm = mod_isochor.MassGen(radius)
-b = np.linspace(9.0,210,240) #kpc
-NOVI = ColumnDensityGen(b, 0.5, mod_isochor, element=8, ion=6)
-NOVII = ColumnDensityGen(b, 0.5, mod_isochor, element=8, ion=7)
-MHot = MHot/MSun
-MWarm = MWarm/MSun
+# radius = np.linspace(9.0,250,200) #kpc
+# nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, _ = mod_isochor.ProfileGen(radius)
+# MHot, MWarm = mod_isochor.MassGen(radius)
+# b = np.linspace(9.0,210,240) #kpc
+# NOVI = ColumnDensityGen(b, 0.5, mod_isochor, element=8, ion=6)
+# NOVII = ColumnDensityGen(b, 0.5, mod_isochor, element=8, ion=7)
+# MHot = MHot/MSun
+# MWarm = MWarm/MSun
 
-fvh = 1-fvw
-fmh = 1-fmw
-nHwarm = (mu/muHp)*nwarm_local
+# fvh = 1-fvw
+# fmh = 1-fmw
+# nHwarm = (mu/muHp)*nwarm_local
 
-mod_isochor.PlotDistributionGen(radius[100])
-mod_isochor.PlotDistributionGen(radius[-50])
+#mod_isochor.PlotDistributionGen(radius[100])
+#mod_isochor.PlotDistributionGen(radius[-50])
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-plt.semilogy(radius, fvw, label='volme')
-plt.semilogy(radius, fmw, label='mass')
-plt.grid()
-plt.ylabel(r'Warm gas filling factor')
-plt.xlabel('radius [kpc]')
-ax.yaxis.set_ticks_position('both')
-ax.set_xlim(0,250)
-plt.legend(loc='best')
-plt.show()
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# plt.semilogy(radius, fvw, label='volme')
+# plt.semilogy(radius, fmw, label='mass')
+# plt.grid()
+# plt.ylabel(r'Warm gas filling factor')
+# plt.xlabel('radius [kpc]')
+# ax.yaxis.set_ticks_position('both')
+# ax.set_xlim(0,250)
+# plt.legend(loc='best')
+# plt.show()
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-plt.semilogy(radius, nhot_local, label='hot', color='tab:red')
-plt.semilogy(radius, nwarm_local, label='warm', color='tab:blue')
-plt.semilogy(radius, nhot_global, ls = '--', color='tab:red')
-plt.semilogy(radius, nwarm_global, ls = '--', color='tab:blue')
-plt.grid()
-plt.ylabel(r'$\rm <n_{H}(r)>$ [CGS]')
-plt.xlabel('radius [kpc]')
-ax.yaxis.set_ticks_position('both')
-ax.set_xlim(0,250)
-#ax.set_ylim(1e-6,1e-2)
-plt.legend(loc='best')
-plt.show()
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# plt.semilogy(radius, nhot_local, label='hot', color='tab:red')
+# plt.semilogy(radius, nwarm_local, label='warm', color='tab:blue')
+# plt.semilogy(radius, nhot_global, ls = '--', color='tab:red')
+# plt.semilogy(radius, nwarm_global, ls = '--', color='tab:blue')
+# plt.grid()
+# plt.ylabel(r'$\rm <n_{H}(r)>$ [CGS]')
+# plt.xlabel('radius [kpc]')
+# ax.yaxis.set_ticks_position('both')
+# ax.set_xlim(0,250)
+# #ax.set_ylim(1e-6,1e-2)
+# plt.legend(loc='best')
+# plt.show()
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-plt.semilogy(radius[:-1], MWarm, label='warm', color='tab:blue')
-plt.semilogy(radius[:-1], MHot, label='Hot', color='tab:red')
-plt.grid()
-plt.ylabel(r'$\rm M_{gas} [M_{\odot}]$')
-plt.xlabel('radius [kpc]')
-plt.legend(loc='best')
-plt.show()
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# plt.semilogy(radius[:-1], MWarm, label='warm', color='tab:blue')
+# plt.semilogy(radius[:-1], MHot, label='Hot', color='tab:red')
+# plt.grid()
+# plt.ylabel(r'$\rm M_{gas} [M_{\odot}]$')
+# plt.xlabel('radius [kpc]')
+# plt.legend(loc='best')
+# plt.show()
 
-obsData = np.loadtxt('columndensityData.txt')
-fig = plt.figure()
-ax = fig.add_subplot(111)
-plt.loglog(b/(mod_isochor.unmodified.Halo.r200*mod_isochor.unmodified.Halo.UNIT_LENGTH/kpc), NOVI, label=r'$N_{OVI}$')
-#plt.loglog(b/(mod_isochor.unmodified.Halo.r200*mod_isochor.unmodified.Halo.UNIT_LENGTH/kpc), NOVII, label=r'$N_{OVII}$')
-plt.loglog(obsData[:,0], obsData[:,1], 'o', label=r'Observed $N_{OVI}$')
-plt.grid()
-plt.ylim(5e13,2e15)
-plt.ylabel(r'Column Density [cm^-2]')
-plt.xlabel(r'$\rm b/r_{vir}$')
-plt.xlim(xmin=5e-2, xmax=1.1)
-plt.legend(loc='best')
-plt.show()
+# obsData = np.loadtxt('columndensityData.txt')
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# plt.loglog(b/(mod_isochor.unmodified.Halo.r200*mod_isochor.unmodified.Halo.UNIT_LENGTH/kpc), NOVI, label=r'$N_{OVI}$')
+# #plt.loglog(b/(mod_isochor.unmodified.Halo.r200*mod_isochor.unmodified.Halo.UNIT_LENGTH/kpc), NOVII, label=r'$N_{OVII}$')
+# plt.loglog(obsData[:,0], obsData[:,1], 'o', label=r'Observed $N_{OVI}$')
+# plt.grid()
+# plt.ylim(5e13,2e15)
+# plt.ylabel(r'Column Density [cm^-2]')
+# plt.xlabel(r'$\rm b/r_{vir}$')
+# plt.xlim(xmin=5e-2, xmax=1.1)
+# plt.legend(loc='best')
+# plt.show()
