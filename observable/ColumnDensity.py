@@ -44,7 +44,7 @@ def ColumnDensityGen(b_, met, redisProf, element=8, ion=6): #takes in b_ in kpc,
     #PvwT = interpolate.interp1d(xw, PvwT)
     #PvhT = interpolate.interp1d(xh, PvhT)
     TwM = redisProf.TmedVW*np.exp(-redisProf.sigW**2/2)
-    ThM = redisProf.TmedVH*np.exp(-redisProf.sigH**2/2)*((1-fvw)/(1-fmw))
+    ThM = unmod_T*((1-fvw)/(1-fmw))
     #Assumtion == Phases are internally isobaric
     
     a0 = 4.9e-4 # Asplund et al. 2009
