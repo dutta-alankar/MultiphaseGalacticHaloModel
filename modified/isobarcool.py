@@ -71,7 +71,7 @@ class IsobarCoolRedistribution:
             xwarm = np.log(self.TmedVW/(unmod_T[indx]*np.exp(self.sigH**2/2)))
             
             fmw[indx] = 0.5*(1 + erf((xmin+self.sig**2)/(np.sqrt(2)*self.sig)))
-            fvw[indx] = (self.TmedVW/self.TmedVH)*np.exp(-0.5*(self.sigW**2-self.sig**2))*fmw[indx]
+            fvw[indx] = (self.TmedVW/unmod_T[indx])*np.exp(-0.5*self.sigW**2)*fmw[indx]
             
             
         nwarm_local = unmod_n*(fmw/fvw)
@@ -79,7 +79,7 @@ class IsobarCoolRedistribution:
         nwarm_global = nwarm_local*fvw
         nhot_global  = nhot_local*(1-fvw)
         prs_warm = nwarm_local*kB*self.TmedVW*np.exp(-self.sigW**2/2)
-        prs_hot  = nhot_local*kB*self.TmedVH*np.exp(-self.sigH**2/2)*((1-fvw)/(1-fmw))
+        prs_hot  = nhot_local*kB*unmod_T*((1-fvw)/(1-fmw))
         return (nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, Tcut)
     
     def MassGen(self, radius_): #takes in r in kpc, returns Halo gas mass of each component in CGS
@@ -136,7 +136,7 @@ class IsobarCoolRedistribution:
             xmin  = np.log(Tmin/(unmod_T*np.exp(self.sigH**2/2))) #cutoff in log T where seperation between hot and warm phases occur
             
             fmw = 0.5*(1 + erf((xmin+self.sig**2)/(np.sqrt(2)*self.sig)))
-            fvw = (self.TmedVW/self.TmedVH)*np.exp(-0.5*(self.sigW**2-self.sig**2))*fmw
+            fvw = (self.TmedVW/unmod_T)*np.exp(-0.5*self.sigW**2)*fmw
             
             fig = plt.figure()
             ax = fig.add_subplot(111)
