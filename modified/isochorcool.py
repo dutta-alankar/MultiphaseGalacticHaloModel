@@ -162,28 +162,40 @@ class IsochorCoolRedistribution:
             fvw = 0.5*(1 + erf(xmin/(np.sqrt(2)*self.sig)))
             fmw = 0.5*(1 + erf((xmin+self.sig**2)/(np.sqrt(2)*self.sig)))
             
-            fig = plt.figure()
+            fig = plt.figure(figsize=(13,10))
             ax = fig.add_subplot(111)
             x = np.log(Temp/(unmod_T*np.exp(self.sigH**2/2)))
             gvh = np.exp(-x**2/(2*self.sigH**2))/(self.sigH*np.sqrt(2*pi))
             xp = np.log(Temp/self.TmedVW)
             gvw = fvw*np.exp(-xp**2/(2*self.sigW**2))/(self.sigW*np.sqrt(2*pi))
-            plt.semilogy(np.log10(Temp), gvh, color='tab:red', label='hot')
-            plt.semilogy(np.log10(Temp), gvw, color='tab:blue', label='warm', linestyle='--')
-            #plt.semilogx(Temp, ratio, label='tcool/tdyn=%d'%cutoff, color='tab:gray')
             Tcutoff = np.exp(xmin)*(unmod_T*np.exp(self.sigH**2/2))
-            plt.vlines(np.log10(Tcutoff), 1e-3, 2.1, colors='black', linestyles='--', label=r'$T_c\ (t_{\rm cool}/t_{\rm ff}=%.1f)$'%self.cutoff)
-            plt.vlines(np.log10(unmod_T*np.exp(self.sigH**2/2)), 1e-3, 2.1, colors='tab:red', linestyles=':', label=r'$T_{med,V}^{(h)}$')
-            plt.vlines(np.log10(self.TmedVW), 1e-3, 2.1, colors='tab:blue', linestyles=':', label=r'$T_{med,V}^{(w)}$')
-            #plt.semilogx(Temp, ratio)
+            
+            plt.semilogy(np.log10(Temp), np.piecewise(gvh,[Temp>=Tcutoff,],[lambda val:val, lambda val:0]), color='tab:red', label='hot, modified', 
+                         linewidth=5)
+            plt.semilogy(np.log10(Temp), gvh, color='tab:red', alpha=0.5, label='hot, unmodified', 
+                         linewidth=5)
+            plt.semilogy(np.log10(Temp), gvw, color='tab:blue', label='warm', linestyle='--', 
+                         linewidth=5)
+            #plt.semilogx(Temp, ratio, label='tcool/tdyn=%d'%cutoff, color='tab:gray')
+            
+            plt.vlines(np.log10(Tcutoff), 1e-3, 2.1, colors='black', linestyles='--', label=r'$T_c\ (t_{\rm cool}/t_{\rm ff}=%.1f)$'%self.cutoff, 
+                         linewidth=5)
+            plt.vlines(np.log10(unmod_T*np.exp(self.sigH**2/2)), 1e-3, 2.1, colors='tab:red', linestyles=':', label=r'$T_{med,V}^{(h)}$', 
+                         linewidth=5)
+            plt.vlines(np.log10(self.TmedVW), 1e-3, 2.1, colors='tab:blue', linestyles=':', label=r'$T_{med,V}^{(w)}$', 
+                         linewidth=5)
+            
+            plt.tick_params(axis='both', which='major', labelsize=24, direction="out", pad=5)
+            plt.tick_params(axis='both', which='minor', labelsize=24, direction="out", pad=5)
             plt.grid()
-            plt.title(r'$r =$ %.1f kpc [isothermal with isochoric modification]'%radius_)
+            plt.title(r'$r = $%.1f kpc [isothermal with isochoric modification]'%radius_, size=28)
             plt.ylim(1e-3, 2.1)
             plt.xlim(5, 7)
-            plt.ylabel(r'$T \mathscr{P}_V(T)$')
-            plt.xlabel(r'$\log_{10} (T [K])$')
-            ax.yaxis.set_ticks_position('both')
-            plt.legend(loc='best')
+            plt.ylabel(r'$T \mathscr{P}_V(T)$', size=28)
+            plt.xlabel(r'$\log_{10} (T [K])$', size=28)
+            # ax.yaxis.set_ticks_position('both')
+            plt.legend(loc='upper right', prop={'size': 20}, framealpha=0.3, shadow=False, fancybox=True, bbox_to_anchor=(1.1, 1))
+            plt.savefig('isothermal_isochoric_PDF.png', transparent=True)
             plt.show()
             
             # fig = plt.figure()
