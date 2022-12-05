@@ -59,19 +59,25 @@ class IsochorCoolRedistribution:
         fvw   = np.zeros_like(radius)
         fmw   = np.zeros_like(radius)
         Tcut  = np.zeros_like(radius)
-
+        
         for indx, r_val in enumerate(radius):
             r_val = r_val*IsochorCoolRedistribution.UNIT_LENGTH #CGS
             ndens = unmod_prsTh[indx]/(kB*Temp) #CGS
             unmod_tcool = tcool(ndens, Temp) #code
             ratio = unmod_tcool/tdyn[indx]
             
-            Tmin = interpolate.interp1d(ratio, Temp, fill_value="extrapolate")
-            Tmin = Tmin(self.cutoff) 
-            Tcut[indx] = Tmin
-            xmin  = np.log(Tmin/(unmod_T[indx]*np.exp(self.sigH**2/2))) #cutoff in log T where seperation between hot and warm phases occur
-            xwarm = np.log(self.TmedVW/(unmod_T[indx]*np.exp(self.sigH**2/2)))
-            
+            if (self.cutoff>=0.1):
+                Tmin = interpolate.interp1d(ratio, Temp, fill_value="extrapolate")
+                Tmin = Tmin(self.cutoff) 
+                Tcut[indx] = Tmin
+                xmin  = np.log(Tmin/(unmod_T[indx]*np.exp(self.sigH**2/2))) #cutoff in log T where seperation between hot and warm phases occur
+                xwarm = np.log(self.TmedVW/(unmod_T[indx]*np.exp(self.sigH**2/2)))
+            else:
+                Tmin = interpolate.interp1d(ratio, Temp, fill_value="extrapolate")
+                Tmin = Tmin(self.cutoff) 
+                Tcut[indx] = Tmin
+                xmin = -np.inf
+                
             #if (Tmin>unmod_T[indx]): print('Trouble!') #xmin<0
             if (True): #(xmin-xwarm)>self.sigW/2):#): #unmod_T[indx]>self.TmedVW or 
                 
@@ -98,12 +104,15 @@ class IsochorCoolRedistribution:
             ax.yaxis.set_ticks_position('both')
             plt.show()
         '''
-        nwarm_local = unmod_n*(fmw/fvw)
-        nhot_local  = unmod_n*((1-fmw)/(1-fvw))   
+        #epsilon  = 1e-6
+        nwarm_local  = unmod_n*(fmw/fvw)
+        nhot_local   = unmod_n*((1-fmw)/(1-fvw))  
+        nwarm_local  = np.piecewise(nwarm_local, [np.isnan(nwarm_local),], [lambda x:0, lambda x:x])
+        nhot_local   = np.piecewise(nhot_local, [np.isnan(nhot_local),], [lambda x:0, lambda x:x])
         nwarm_global = nwarm_local*fvw
         nhot_global  = nhot_local*(1-fvw)
-        prs_warm = nwarm_local*kB*self.TmedVW*np.exp(-self.sigW**2/2)
-        prs_hot  = nhot_local*kB*unmod_T
+        prs_warm     = nwarm_local*kB*self.TmedVW*np.exp(-self.sigW**2/2)
+        prs_hot      = nhot_local*kB*unmod_T
         return (nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, Tcut)
     
     def MassGen(self, radius_): #takes in r in kpc, returns Halo gas mass of each component in CGS

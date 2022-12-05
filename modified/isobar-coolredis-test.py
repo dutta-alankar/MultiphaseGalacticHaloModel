@@ -62,8 +62,11 @@ radius = np.linspace(9.0,250,200) #kpc
 nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, _ = mod_isobar.ProfileGen(radius)
 MHot, MWarm = mod_isobar.MassGen(radius)
 b = np.linspace(9.0,210,240) #kpc
-NOVI =  ColumnDensityGen(b, 0.5, mod_isobar, element=8, ion=6)
-NOVII = ColumnDensityGen(b, 0.5, mod_isobar, element=8, ion=7)
+NOVI_PIE  =  ColumnDensityGen(b, mod_isobar.unmodified.metallicity, mod_isobar, element=8, ion=6, mode='PIE')
+NOVI_CIE  =  ColumnDensityGen(b, mod_isobar.unmodified.metallicity, mod_isobar, element=8, ion=6, mode='CIE')
+NOVII_PIE = ColumnDensityGen(b, mod_isobar.unmodified.metallicity, mod_isobar, element=8, ion=7, mode='PIE')
+NOVII_CIE = ColumnDensityGen(b, mod_isobar.unmodified.metallicity, mod_isobar, element=8, ion=7, mode='CIE')
+
 MHot = MHot/MSun
 MWarm = MWarm/MSun
 
@@ -114,8 +117,10 @@ plt.show()
 obsData = np.loadtxt('columndensityData.txt')
 fig = plt.figure()
 ax = fig.add_subplot(111)
-plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVI, label=r'$N_{OVI}$')
-#plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVII, label=r'$N_{OVII}$')
+plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVI_CIE, label=r'$N_{OVI}$ (CIE)')
+plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVI_PIE, label=r'$N_{OVI}$ (PIE)')
+#plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVII_CIE, label=r'$N_{OVII}$ (CIE)')
+#plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVII_PIE, label=r'$N_{OVII}$ (PIE)')
 plt.loglog(obsData[:,0], obsData[:,1], 'o', label=r'Observed $N_{OVI}$')
 plt.grid()
 plt.ylim(5e13,2e15)
@@ -142,8 +147,10 @@ radius = np.linspace(9.0,250,200) #kpc
 nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, _ = mod_isobar.ProfileGen(radius)
 MHot, MWarm = mod_isobar.MassGen(radius)
 b = np.linspace(9.0,210,240) #kpc
-NOVI  = ColumnDensityGen(b, 0.5, mod_isobar, element=8, ion=6)
-NOVII = ColumnDensityGen(b, 0.5, mod_isobar, element=8, ion=7)
+NOVI_PIE  =  ColumnDensityGen(b, mod_isobar.unmodified.metallicity, mod_isobar, element=8, ion=6, mode='PIE')
+NOVI_CIE  =  ColumnDensityGen(b, mod_isobar.unmodified.metallicity, mod_isobar, element=8, ion=6, mode='CIE')
+NOVII_PIE = ColumnDensityGen(b, mod_isobar.unmodified.metallicity, mod_isobar, element=8, ion=7, mode='PIE')
+NOVII_CIE = ColumnDensityGen(b, mod_isobar.unmodified.metallicity, mod_isobar, element=8, ion=7, mode='CIE')
 MHot = MHot/MSun
 MWarm = MWarm/MSun
 
@@ -194,8 +201,10 @@ plt.show()
 obsData = np.loadtxt('columndensityData.txt')
 fig = plt.figure()
 ax = fig.add_subplot(111)
-plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVI, label=r'$N_{OVI}$')
-#plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVII, label=r'$N_{OVII}$')
+plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVI_CIE, label=r'$N_{OVI}$ (CIE)')
+plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVI_PIE, label=r'$N_{OVI}$ (PIE)')
+#plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVII_CIE, label=r'$N_{OVII} (CIE)$')
+#plt.loglog(b/(mod_isobar.unmodified.Halo.r200*mod_isobar.unmodified.Halo.UNIT_LENGTH/kpc), NOVII_PIE, label=r'$N_{OVII} (PIE)$')
 plt.loglog(obsData[:,0], obsData[:,1], 'o', label=r'Observed $N_{OVI}$')
 plt.grid()
 plt.ylim(5e13,2e15)
