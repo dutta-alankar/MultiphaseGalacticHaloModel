@@ -70,6 +70,8 @@ int main( int argc, char *argv[] )
 		#else
 		sprintf(chLine,"CMB redshift %.3f", redshift);
 		cdRead( chLine );
+		/* this is a pure collisional model to turn off photoionization */
+		cdRead( "no photoionization"  );
 		#endif
 		
 		sprintf(chLine, "sphere" );

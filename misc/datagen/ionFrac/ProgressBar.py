@@ -14,14 +14,14 @@ class ProgressBar(object):
         self.percent = 0.
         self.bar = '█' * int(self.percent) + '-' * (100-int(self.percent))
         self.color = color
-        print(self.color + f"\r|{self.bar}| {self.percent:.2f}%", end='\r')
+        print(self.color + f"\r|{self.bar}| {self.percent:.2f}%", end='\r', flush=True)
         
     def progress(self, progress, total):
         self.percent = 100. * (progress/total)
         self.bar = '█' * int(self.percent) + '-' * (100-int(self.percent))
-        print(self.color + f"\r|{self.bar}| {self.percent:.2f}%", end='\r')
+        print(self.color + f"\r|{self.bar}| {self.percent:.2f}%", end='\r', flush=True)
         if progress == total:
-            print(colorama.Fore.GREEN + f"\r|{self.bar}| {self.percent:.2f}%", end='\r')
+            print(colorama.Fore.GREEN + f"\r|{self.bar}| {self.percent:.2f}%", end='\r', flush=True)
             
     def end(self):
-        print(colorama.Fore.RESET)
+        print(colorama.Fore.RESET, flush=True)

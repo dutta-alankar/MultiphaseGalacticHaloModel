@@ -127,3 +127,41 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#Libraries
+.so
+
+#Cloudy stuffs
+ionization_CIE
+ionization_PIE
+auto/
+.exe
+.h5
+.log
+
+# repo specific database files
+misc/ionization_CIE
+misc/ionization_PIE
+misc/datagen/emmSpec/*.exe
+misc/datagen/emmSpec/auto/*
+misc/datagen/emmSpec/data/*
+misc/datagen/emmSpec/*.log
+misc/datagen/emmSpec/*.exe
+misc/datagen/ionFrac/auto/*
+misc/datagen/ionFrac/data/*
+misc/datagen/ionFrac/*.log
+misc/datagen/ionFrac/ionization_CIE
+misc/datagen/ionFrac/ionization_PIE
+misc/cloudy-data/emission-lowres/*.h5
+misc/cloudy-data/ionization-lowres/*.h5
+misc/cloudy-data/emission/*.h5
+misc/cloudy-data/ionization/*.h5
+misc/cloudy-data/emission-hires/*.h5
+misc/cloudy-data/ionization-hires/*.h5
+misc/datagen/coolingFunction/hazy_coolingcurve_CIE
+misc/datagen/coolingFunction/hazy_coolingcurve_PIE
+misc/datagen/coolingFunction/*.dat
+misc/datagen/coolingFunction/*.out
+modified/auto
+modified/auto/*.in
+modified/*.exe

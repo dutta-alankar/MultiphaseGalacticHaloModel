@@ -29,7 +29,7 @@ fOVII = interpolate.interp1d(frac[:,0], frac[:,ion]) #temperature and ion fracti
 ion = 8
 fOVIII = interpolate.interp1d(frac[:,0], frac[:,ion]) #temperature and ion fraction in log10 
 
-do_isothermal, do_isentropic = False, True
+do_isothermal, do_isentropic = True, True
     
 # fig = plt.figure()
 # ax = fig.add_subplot(111)
@@ -52,33 +52,48 @@ if(do_isothermal):
     TmedVH=1.5e6
     TmedVW=3.e5
     sig = 0.3
-    cutoff = 8
+    cutoff = 6.0
     THotM = TmedVH*np.exp(-sig**2/2)
     
+    radius = np.linspace(9.0,250,30) #kpc
+    b = np.linspace(9.0,249,25) #kpc
+    
+    # PIE
     unmodified = IsothermalUnmodified(THot=THotM,
                           P0Tot=4580, alpha=1.9, sigmaTurb=60, 
-                          M200=1e12, MBH=2.6e6, Mblg=6e10, rd=3.0, r0=8.5, C=12)
-    mod_isochor = IsochorCoolRedistribution(unmodified, TmedVH, TmedVW, sig, cutoff)
+                          M200=1e12, MBH=2.6e6, Mblg=6e10, rd=3.0, r0=8.5, C=12, 
+                          redshift=0.001, ionization='PIE')
+    mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
     
-    radius = np.linspace(9.0,250,30) #kpc
+    nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, _ = mod_isochor.ProfileGen(radius)    
+    
+    mod_isochor.PlotDistributionGen(radius[2])
+    
+    NOVI_PIE   =  ColumnDensityGen(b, mod_isochor, element=8, ion=6)
+    NOVII_PIE  =  ColumnDensityGen(b, mod_isochor, element=8, ion=7)
+    NNV_PIE    =  ColumnDensityGen(b, mod_isochor, element=7, ion=5)
+    
+    
+    # CIE
+    unmodified = IsothermalUnmodified(THot=THotM,
+                          P0Tot=4580, alpha=1.9, sigmaTurb=60, 
+                          M200=1e12, MBH=2.6e6, Mblg=6e10, rd=3.0, r0=8.5, C=12, 
+                          redshift=0.001, ionization='CIE')
+    mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
+    
     nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, _ = mod_isochor.ProfileGen(radius)
-    MHot, MWarm = mod_isochor.MassGen(radius)
-    b = np.linspace(9.0,249,25) #kpc
-    NOVI_PIE   =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=8, ion=6, mode='PIE')
-    NOVI_CIE   =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=8, ion=6, mode='CIE')
-    NOVII_PIE  =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=8, ion=7, mode='PIE')
-    NOVII_CIE  =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=8, ion=7, mode='CIE')
-    NNV_PIE    =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=7, ion=5, mode='PIE')
-    NNV_CIE    =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=7, ion=5, mode='CIE')
     
-    MHot = MHot/MSun
-    MWarm = MWarm/MSun
+    mod_isochor.PlotDistributionGen(radius[2])
     
-    fvh = 1-fvw
-    fmh = 1-fmw
-    nHwarm = (mu/muHp)*nwarm_local
+    NOVI_CIE   =  ColumnDensityGen(b, mod_isochor, element=8, ion=6)
+    NOVII_CIE  =  ColumnDensityGen(b, mod_isochor, element=8, ion=7)
+    NNV_CIE    =  ColumnDensityGen(b, mod_isochor, element=7, ion=5)
     
-    mod_isochor.PlotDistributionGen(radius[15])
+    # fvh = 1-fvw
+    # fmh = 1-fmw
+    # nHwarm = (mu/muHp)*nwarm_local
+    
+    
     #mod_isochor.PlotDistributionGen(radius[-50])
     
     # fig = plt.figure()
@@ -129,7 +144,7 @@ if(do_isothermal):
     plt.loglog(obsData[:,0], obsData[:,1], 'o', 
                label=r'observed data', markersize=15)
     plt.grid()
-    plt.ylim(5e13,2.3e15)
+    # plt.ylim(5e13,2.3e15)
     plt.ylabel(r'$N_{\rm OVI} [{\rm cm}^{-2}]$', size=28)
     plt.xlabel(r'$\rm b/r_{200}$', size=28)
     plt.title('OVI column density', size=28)
@@ -150,7 +165,7 @@ if(do_isothermal):
     #plt.loglog(obsData[:,0], obsData[:,1], 'o', 
     #           label=r'observed data', markersize=15)
     plt.grid()
-    plt.ylim(4e14,3e16)
+    # plt.ylim(4e14,3e16)
     plt.ylabel(r'$N_{\rm OVII} [{\rm cm}^{-2}]$', size=28)
     plt.xlabel(r'$\rm b/r_{200}$', size=28)
     plt.title('OVII column density', size=28)
@@ -172,7 +187,7 @@ if(do_isothermal):
     plt.loglog(obsData[:,0], obsData[:,1], 'o', 
                label=r'observed data', markersize=15)
     plt.grid()
-    plt.ylim(2e13,1e15)
+    # plt.ylim(2e13,1e15)
     plt.ylabel(r'$N_{\rm NV} [{\rm cm}^{-2}]$', size=28)
     plt.xlabel(r'$\rm b/r_{200}$', size=28)
     plt.title('NV column density', size=28)
@@ -187,25 +202,45 @@ if(do_isothermal):
 # _________________ Isentropic profile _______________________
 
 if(do_isentropic):
-    TmedVH=1.5e6
-    TmedVW=3.e5
+    nHrCGM = 1.1e-5
+    TthrCGM = 2.4e5
+    sigmaTurb = 60
+    ZrCGM = 0.3
+    TmedVW = 3.e5
     sig = 0.3
-    cutoff = 1.0
-    THotM = TmedVH*np.exp(-sig**2/2)
-    
-    unmodified = IsentropicUnmodified()
-    mod_isochor = IsochorCoolRedistribution(unmodified, TmedVH, TmedVW, sig, cutoff)
+    cutoff = 4.0
     
     radius = np.linspace(9.0,250,30) #kpc
+    b = np.linspace(9.0,249,25) #kpc
+    
+    # PIE
+    unmodified = IsentropicUnmodified(nHrCGM=nHrCGM, TthrCGM=TthrCGM, sigmaTurb=sigmaTurb, ZrCGM=ZrCGM,
+                                      redshift=0.001, ionization='PIE')
+    mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
+    
+    nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, _ = mod_isochor.ProfileGen(radius)    
+        
+    mod_isochor.PlotDistributionGen(radius[2])
+    
+    NOVI_PIE   =  ColumnDensityGen(b, mod_isochor, element=8, ion=6)
+    NOVII_PIE  =  ColumnDensityGen(b, mod_isochor, element=8, ion=7)
+    NNV_PIE    =  ColumnDensityGen(b, mod_isochor, element=7, ion=5)
+    
+    unmodified = IsentropicUnmodified()
+    mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
+    
+    # CIE
+    unmodified = IsentropicUnmodified(nHrCGM=nHrCGM, TthrCGM=TthrCGM, sigmaTurb=sigmaTurb, ZrCGM=ZrCGM,
+                                      redshift=0.001, ionization='CIE')
+    mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
+    
     nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, _ = mod_isochor.ProfileGen(radius)
-    MHot, MWarm = mod_isochor.MassGen(radius)
-    b = np.linspace(9.0,249, 25) #kpc
-    NOVI_PIE   =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=8, ion=6, mode='PIE')
-    NOVI_CIE   =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=8, ion=6, mode='CIE')
-    NOVII_PIE  =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=8, ion=7, mode='PIE')
-    NOVII_CIE  =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=8, ion=7, mode='CIE')
-    NNV_PIE    =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=7, ion=5, mode='PIE')
-    NNV_CIE    =  ColumnDensityGen(b, mod_isochor, redshift=0.001, element=7, ion=5, mode='CIE')
+    
+    mod_isochor.PlotDistributionGen(radius[2])
+    
+    NOVI_CIE   =  ColumnDensityGen(b, mod_isochor, element=8, ion=6)
+    NOVII_CIE  =  ColumnDensityGen(b, mod_isochor, element=8, ion=7)
+    NNV_CIE    =  ColumnDensityGen(b, mod_isochor, element=7, ion=5)
     
     # MHot = MHot/MSun
     # MWarm = MWarm/MSun
@@ -265,7 +300,7 @@ if(do_isentropic):
     plt.loglog(obsData[:,0], obsData[:,1], 'o', 
                label=r'observed data', markersize=15)
     plt.grid()
-    #plt.ylim(5e13,2.3e15)
+    # plt.ylim(5e13,2.3e15)
     plt.ylabel(r'$N_{\rm OVI} [{\rm cm}^{-2}]$', size=28)
     plt.xlabel(r'$\rm b/r_{200}$', size=28)
     plt.title('OVI column density', size=28)
@@ -286,7 +321,7 @@ if(do_isentropic):
     #plt.loglog(obsData[:,0], obsData[:,1], 'o', 
     #           label=r'observed data', markersize=15)
     plt.grid()
-    #plt.ylim(4e14,3e16)
+    # plt.ylim(4e14,3e16)
     plt.ylabel(r'$N_{\rm OVII} [{\rm cm}^{-2}]$', size=28)
     plt.xlabel(r'$\rm b/r_{200}$', size=28)
     plt.title('OVII column density', size=28)
@@ -308,7 +343,7 @@ if(do_isentropic):
     plt.loglog(obsData[:,0], obsData[:,1], 'o', 
                label=r'observed data', markersize=15)
     plt.grid()
-    #plt.ylim(2e13,1e15)
+    # plt.ylim(2e13,1e15)
     plt.ylabel(r'$N_{\rm NV} [{\rm cm}^{-2}]$', size=28)
     plt.xlabel(r'$\rm b/r_{200}$', size=28)
     plt.title('NV column density', size=28)

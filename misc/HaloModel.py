@@ -29,6 +29,7 @@ class HaloModel:
         #self.r200 = 258*kpc/HaloModel.UNIT_LENGTH  # Test with Faerman but not self-consistent
         self.r200 = (3*self.M200/(800*pi*(dcrit0/HaloModel.UNIT_DENSITY)))**(1/3.)
         self.rs = self.r200/self.C
+        self._withDisk = True
      
     def Mass(self, r): #takes in r in kpc, returns Halo Mass in CGS
         r_ = r*kpc/HaloModel.UNIT_LENGTH
@@ -38,7 +39,7 @@ class HaloModel:
                                 0.142*(1-(1+(rp/(kpc/HaloModel.UNIT_LENGTH))**1.5)*\
                                 np.exp(-(rp/((kpc/HaloModel.UNIT_LENGTH)))**1.5)) + \
                                 0.833*(1-(1+rp/self.rd)*np.exp(-rp/self.rd)))*self.Mb
-        return (self.MBH + MHalo(r_) + MDisk(r_))*HaloModel.UNIT_MASS
+        return (self.MBH + MHalo(r_) + (MDisk(r_) if self._withDisk else 0.) )*HaloModel.UNIT_MASS
     
     def Phi(self, r): #takes in r in kpc, returns Halo Potential in CGS
         r_ = r*kpc/HaloModel.UNIT_LENGTH

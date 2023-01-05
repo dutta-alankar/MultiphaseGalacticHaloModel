@@ -12,6 +12,8 @@ from itertools import product
 import os
 import subprocess
 
+warn = False 
+
 class interpolate_emission:
     
     def __init__(self):    
@@ -25,7 +27,7 @@ class interpolate_emission:
         self.loc = _tmp #'./cloudy-data/emission'
         
         data = h5py.File('%s/emission.b_%06d.h5'%(self.loc,0), 'r')
-        self.n_data   = np.array(data['params/ndens'])
+        self.nH_data   = np.array(data['params/nH'])
         self.T_data   = np.array(data['params/temperature'])
         self.Z_data   = np.array(data['params/metallicity'])
         self.red_data = np.array(data['params/redshift'])
@@ -35,13 +37,13 @@ class interpolate_emission:
         self.total_size = np.prod(np.array(data['header/total_size']))
         data.close()
     
-    def interpolate(self, ndens=1.2e-4, temperature=2.7e6, metallicity=0.5, redshift=0.2): #, mode='PIE'):
+    def interpolate(self, nH=1.2e-4, temperature=2.7e6, metallicity=0.5, redshift=0.2, mode='PIE'):
         
         i_vals, j_vals, k_vals, l_vals = None, None, None, None
-        if (np.sum(ndens==self.n_data)==1): 
-            i_vals = [np.where(ndens==self.n_data)[0][0], np.where(ndens==self.n_data)[0][0]]
+        if (np.sum(nH==self.nH_data)==1): 
+            i_vals = [np.where(nH==self.nH_data)[0][0], np.where(nH==self.nH_data)[0][0]]
         else:
-            i_vals = [np.sum(ndens>self.n_data)-1,np.sum(ndens>self.n_data)]
+            i_vals = [np.sum(nH>self.nH_data)-1,np.sum(nH>self.nH_data)]
         
         if (np.sum(temperature==self.T_data)==1): 
             j_vals = [np.where(temperature==self.T_data)[0][0], np.where(temperature==self.T_data)[0][0]]
@@ -67,9 +69,33 @@ class interpolate_emission:
         batch_ids = []
         #identify unique batches
         for i, j, k, l in product(i_vals, j_vals, k_vals, l_vals):
-            counter = (l)*self.Z_data.shape[0]*self.T_data.shape[0]*self.n_data.shape[0]+ \
-                      (k)*self.T_data.shape[0]*self.n_data.shape[0] + \
-                      (j)*self.n_data.shape[0] + \
+            if (i==self.nH_data.shape[0]): 
+                if (warn): print("Problem: nH", nH)
+                i = i-1
+            if (i==-1): 
+                if (warn): print("Problem: nH", nH)
+                i = i+1
+            if (j==self.T_data.shape[0]): 
+                if (warn): print("Problem: T", temperature)
+                j = j-1
+            if (j==-1): 
+                if (warn): print("Problem: T", temperature)
+                j = j+1
+            if (k==self.Z_data.shape[0]): 
+                if (warn): print("Problem: met", metallicity)
+                k = k-1
+            if (k==-1): 
+                if (warn): print("Problem: met", metallicity)
+                k = k+1
+            if (l==self.red_data.shape[0]): 
+                if (warn): print("Problem: red", redshift)
+                l = l-1
+            if (l==-1): 
+                if (warn): print("Problem: red", redshift)
+                l = l+1
+            counter = (l)*self.Z_data.shape[0]*self.T_data.shape[0]*self.nH_data.shape[0]+ \
+                      (k)*self.T_data.shape[0]*self.nH_data.shape[0] + \
+                      (j)*self.nH_data.shape[0] + \
                       (i)
             batch_id  = counter//self.batch_size 
             batch_ids.append(batch_id)
@@ -81,19 +107,44 @@ class interpolate_emission:
             data.append([batch_id, hdf])
         
         for i, j, k, l in product(i_vals, j_vals, k_vals, l_vals):
-            d_i = np.abs(self.n_data[i]-ndens)
+            if (i==self.nH_data.shape[0]): 
+                if (warn): print("Problem: nH", nH)
+                i = i-1
+            if (i==-1): 
+                if (warn): print("Problem: nH", nH)
+                i = i+1
+            if (j==self.T_data.shape[0]): 
+                if (warn): print("Problem: T", temperature)
+                j = j-1
+            if (j==-1): 
+                if (warn): print("Problem: T", temperature)
+                j = j+1
+            if (k==self.Z_data.shape[0]): 
+                if (warn): print("Problem: met", metallicity)
+                k = k-1
+            if (k==-1): 
+                if (warn): print("Problem: met", metallicity)
+                k = k+1
+            if (l==self.red_data.shape[0]): 
+                if (warn): print("Problem: red", redshift)
+                l = l-1
+            if (l==-1): 
+                if (warn): print("Problem: red", redshift)
+                l = l+1
+                
+            d_i = np.abs(self.nH_data[i]-nH)
             d_j = np.abs(self.T_data[j]-temperature)
             d_k = np.abs(self.Z_data[k]-metallicity)
             d_l = np.abs(self.red_data[l]-redshift)
             
-            #print('Data vals: ', self.n_data[i], self.T_data[j], self.Z_data[k], self.red_data[l] )
+            #print('Data vals: ', self.nH_data[i], self.T_data[j], self.Z_data[k], self.red_data[l] )
             #print(i, j, k, l)
             epsilon = 1e-6
             weight = np.sqrt(d_i**2 + d_j**2 + d_k**2 + d_l**2 + epsilon)
             
-            counter = (l)*self.Z_data.shape[0]*self.T_data.shape[0]*self.n_data.shape[0]+ \
-                      (k)*self.T_data.shape[0]*self.n_data.shape[0] + \
-                      (j)*self.n_data.shape[0] + \
+            counter = (l)*self.Z_data.shape[0]*self.T_data.shape[0]*self.nH_data.shape[0]+ \
+                      (k)*self.T_data.shape[0]*self.nH_data.shape[0] + \
+                      (j)*self.nH_data.shape[0] + \
                       (i)
             batch_id  = counter//self.batch_size 
             
@@ -101,7 +152,7 @@ class interpolate_emission:
                 if id_data[0] == batch_id:
                     hdf = id_data[1]
                     local_pos = counter%self.batch_size - 1
-                    spectrum[:,1] += (np.array(hdf['output/emission/total'])[local_pos,:]) / weight
+                    spectrum[:,1] += (np.array(hdf[f'output/emission/{mode}/total'])[local_pos,:]) / weight
                 
             inv_weight += 1/weight
          

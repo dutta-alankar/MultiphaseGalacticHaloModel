@@ -16,14 +16,13 @@ Npts = 200
 Model = isent.IsentropicUnmodified()
 radius = np.linspace(Model.Halo.r0*Model.Halo.UNIT_LENGTH/kpc, 
                      Model.rCGM*Model.UNIT_LENGTH/kpc, Npts) #kpc
-rho, PTh, PNTh, PTurb, Ptot = Model.ProfileGen(radius)
+rho, PTh, PNTh, PTurb, Ptot, nH, mu = Model.ProfileGen(radius)
 
-nH = rho/(muHp*mp)
-n  = rho/(mu*mp)
-T  = PTh/(n*kB)
+n  = Model.ndens
+T  = Model.Temperature
 Mcor = integrate.cumtrapz(4*pi*(radius*kpc)**2*rho, radius*kpc)/MSun
 #Mcor = rho*(4/3)*pi*radius**3*Model.UNIT_MASS/MSun
-met  = Model.Z0/np.sqrt(1+((radius*kpc/Model.UNIT_LENGTH)/Model.rZ)**2)
+met  = Model.metallicity
 ZmetAvg = integrate.cumtrapz(4*pi*(radius*kpc)**2*rho*met, radius*kpc)/(Mcor*MSun)
 Mmet    = Model.fZ*Mcor*ZmetAvg #MSun
 
@@ -38,6 +37,15 @@ plt.xlabel('radius [kpc]')
 ax.yaxis.set_ticks_position('both')
 #ax.set_xlim(0,250)
 ax.set_ylim(5e-6,1e-3)
+plt.show()
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+plt.plot(np.log10(T), mu)
+plt.grid()
+plt.ylabel(r'$\mu$ ($n_H$)')
+plt.xlabel(r'Temperature [$K$]')
+ax.yaxis.set_ticks_position('both')
 plt.show()
 
 fig = plt.figure()
