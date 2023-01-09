@@ -150,7 +150,7 @@ def LuminositySpectrumGen(redisProf):
         nHhot  = redisProf.nHhot_local[indx]*redisProf.TmedVH[indx]*np.exp(-redisProf.sigH**2/2)/Temp #CGS
         nHwarm = redisProf.nHwarm_local[indx]*redisProf.TmedVW*np.exp(-redisProf.sigW**2/2)/Temp #CGS
         
-        r_val  = 0.5*((radius[indx]+radius[indx-1]) if indx!=0 else 0.5*radius[indx])*kpc
+        r_val  = 0.5*((radius[indx]+radius[indx-1]) if indx!=0 else radius[indx])*kpc
         dr_val = ((radius[indx]-radius[indx-1]) if indx!=0 else radius[indx])*kpc
         
         # divide by energy to get photon count
