@@ -45,7 +45,7 @@ if(do_isothermal):
     fvw1 = fvw
     Tstart = 4.1
     Tstop  = 7.9
-    Temp  = np.logspace(Tstart, Tstop, 1000) #find tcool/tff for these temperature values
+    Temp  = np.logspace(Tstart, Tstop, 1000)
     
     fig = plt.figure(figsize=(13,10))
     ax = fig.add_subplot(111)
