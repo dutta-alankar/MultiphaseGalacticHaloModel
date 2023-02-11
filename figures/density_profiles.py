@@ -40,6 +40,8 @@ if(do_isothermal):
                           P0Tot=4580, alpha=1.9, sigmaTurb=60, 
                           M200=1e12, MBH=2.6e6, Mblg=6e10, rd=3.0, r0=8.5, C=12, 
                           redshift=0.001, ionization='PIE')
+    
+    ############################### Isochoric redistribution case
     redisProf  = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
     
 
@@ -77,6 +79,8 @@ if(do_isothermal):
                           P0Tot=4580, alpha=1.9, sigmaTurb=60, 
                           M200=1e12, MBH=2.6e6, Mblg=6e10, rd=3.0, r0=8.5, C=12, 
                           redshift=0.001, ionization='PIE')
+    
+    ########################### Isobaric redistribution case
     redisProf  = IsobarCoolRedistribution(unmodified, TmedVW, sig, cutoff)
     
 
@@ -132,6 +136,8 @@ if(do_isentropic):
     # PIE
     unmodified = IsentropicUnmodified(nHrCGM=nHrCGM, TthrCGM=TthrCGM, sigmaTurb=sigmaTurb, ZrCGM=ZrCGM,
                                       redshift=0.001, ionization='PIE')
+    
+    ########################## Isochoric redistribution case
     redisProf = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
     
     radius = np.linspace(redisProf.unmodified.Halo.r0*redisProf.unmodified.Halo.UNIT_LENGTH/kpc, 
@@ -169,6 +175,8 @@ if(do_isentropic):
     # PIE
     unmodified = IsentropicUnmodified(nHrCGM=nHrCGM, TthrCGM=TthrCGM, sigmaTurb=sigmaTurb, ZrCGM=ZrCGM,
                                       redshift=0.001, ionization='PIE')
+    
+    ############################ Isobaric redistribution case
     redisProf = IsobarCoolRedistribution(unmodified, TmedVW, sig, cutoff)
     
     radius = np.linspace(redisProf.unmodified.Halo.r0*redisProf.unmodified.Halo.UNIT_LENGTH/kpc, 
