@@ -26,7 +26,7 @@ class IsobarCoolRedistribution:
     UNIT_ENERGY      = UNIT_MASS*(UNIT_LENGTH/UNIT_TIME)**2
     UNIT_TEMPERATURE = K
     
-    def __init__(self, unmodifiedProfile, TmedVW=3.e5, sig=0.3, cutoff=4):
+    def __init__(self, unmodifiedProfile, TmedVW=3.e5, sig=0.3, cutoff=8):
         self.TmedVW = TmedVW
         self.sig    = sig   # spread of unmodified temperature redistribution
         self.cutoff = cutoff
@@ -69,7 +69,7 @@ class IsobarCoolRedistribution:
         #Warm gas
         Tstart = 3.9
         Tstop  = 7.9
-        Temp  = np.logspace(Tstart, Tstop, 20) #find tcool/tff for these temperature values
+        Temp  = np.logspace(Tstart, Tstop, 1000) #find tcool/tff for these temperature values
         fvw   = np.zeros_like(radius)
         fmw   = np.zeros_like(radius)
         Tcut  = np.zeros_like(radius)
@@ -202,7 +202,7 @@ class IsobarCoolRedistribution:
                 /IsobarCoolRedistribution.UNIT_TIME #ndens in CGS , tcool in code
                         
         #Warm gas
-        Tstart = 4.1
+        Tstart = 3.9
         Tstop  = 7.9
         Temp  = np.logspace(Tstart, Tstop, 1000) #find tcool/tff for these temperature values
         fvw   = np.zeros_like(radius)
