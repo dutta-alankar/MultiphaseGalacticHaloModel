@@ -26,7 +26,7 @@ class IsochorCoolRedistribution:
     UNIT_ENERGY      = UNIT_MASS*(UNIT_LENGTH/UNIT_TIME)**2
     UNIT_TEMPERATURE = K
     
-    def __init__(self, unmodifiedProfile, TmedVW=3.e5, sig=0.3, cutoff=4):
+    def __init__(self, unmodifiedProfile, TmedVW=3.e5, sig=0.3, cutoff=8):
         self.TmedVW = TmedVW
         self.sig    = sig   # spread of unmodified temperature redistribution
         self.cutoff = cutoff
