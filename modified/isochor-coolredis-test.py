@@ -52,7 +52,7 @@ if(do_isothermal):
     TmedVH=1.5e6
     TmedVW=3.e5
     sig = 0.3
-    cutoff = 6.0
+    cutoff = 8.0
     THotM = TmedVH*np.exp(-sig**2/2)
     
     radius = np.linspace(9.0,250,30) #kpc
@@ -208,7 +208,7 @@ if(do_isentropic):
     ZrCGM = 0.3
     TmedVW = 3.e5
     sig = 0.3
-    cutoff = 4.0
+    cutoff = 8.0
     
     radius = np.linspace(9.0,250,30) #kpc
     b = np.linspace(9.0,249,25) #kpc

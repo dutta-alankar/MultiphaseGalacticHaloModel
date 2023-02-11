@@ -5,7 +5,6 @@ Created on Wed Nov 30 12:06:18 2022
 
 @author: alankar
 """
-
 import numpy as np
 import h5py
 from itertools import product
@@ -25,7 +24,9 @@ class interpolate_ionization:
         for i, val in enumerate(_tmp):
             if val == 'MultiphaseGalacticHaloModel':
                 _pos = i
+        #print(_tmp)
         _tmp = os.path.join('/',*_tmp[:_pos+1], 'misc', 'cloudy-data', 'ionization')
+        #print(_tmp)
         self.loc = _tmp #'./cloudy-data/ionization'
         
         data = h5py.File('%s/ionization.b_%06d.h5'%(self.loc,0), 'r')

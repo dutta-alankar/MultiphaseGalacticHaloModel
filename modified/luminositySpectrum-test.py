@@ -26,7 +26,7 @@ if(do_isothermal):
     TmedVH=1.5e6
     TmedVW=3.e5
     sig = 0.3
-    cutoff = 8
+    cutoff = 8.0
     THotM = TmedVH*np.exp(-sig**2/2)
     
     unmodified = IsothermalUnmodified(THot=THotM,
@@ -59,7 +59,7 @@ if(do_isentropic):
     TmedVH=1.5e6
     TmedVW=3.e5
     sig = 0.3
-    cutoff = 0.001
+    cutoff = 8.0
     THotM = TmedVH*np.exp(-sig**2/2)
     
     unmodified = IsentropicUnmodified()

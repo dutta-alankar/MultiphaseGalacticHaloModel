@@ -26,7 +26,7 @@ class IsobarCoolRedistribution:
     UNIT_ENERGY      = UNIT_MASS*(UNIT_LENGTH/UNIT_TIME)**2
     UNIT_TEMPERATURE = K
     
-    def __init__(self, unmodifiedProfile, TmedVW=3.e5, sig=0.3, cutoff=2):
+    def __init__(self, unmodifiedProfile, TmedVW=3.e5, sig=0.3, cutoff=4):
         self.TmedVW = TmedVW
         self.sig    = sig   # spread of unmodified temperature redistribution
         self.cutoff = cutoff
@@ -58,7 +58,7 @@ class IsobarCoolRedistribution:
         unmod_n  = unmod_prsTh/(kB*unmod_T)  
         unmod_prsHTh = unmod_nH*kB*unmod_T
         
-        isobaric = 1
+        isobaric = 0
         tdyn  = np.sqrt(radius**3/(\
                (G*IsobarCoolRedistribution.UNIT_LENGTH**2*IsobarCoolRedistribution.UNIT_DENSITY/IsobarCoolRedistribution.UNIT_VELOCITY**2)\
                    *(self.unmodified.Halo.Mass(radius_)/IsobarCoolRedistribution.UNIT_MASS))) #code
@@ -67,7 +67,7 @@ class IsobarCoolRedistribution:
              
         
         #Warm gas
-        Tstart = 4.1
+        Tstart = 3.9
         Tstop  = 7.9
         Temp  = np.logspace(Tstart, Tstop, 20) #find tcool/tff for these temperature values
         fvw   = np.zeros_like(radius)
@@ -128,7 +128,7 @@ class IsobarCoolRedistribution:
         #epsilon  = 1e-6
         self.Tcut = Tcut
         self.rhowarm_local = unmod_rho*(fmw/fvw)
-        self.rhohot_local  = unmod_rho*((1-fmw)/(1-fvw)) 
+        self.rhohot_local  = unmod_rho*((1.-fmw)/(1.-fvw)) 
         self.nHwarm_local  = self.rhowarm_local*Xp(self.metallicity)/mH
         self.nHhot_local   = self.rhohot_local*Xp(self.metallicity)/mH
         
@@ -143,7 +143,7 @@ class IsobarCoolRedistribution:
         self.nwarm_local  = np.piecewise(self.nwarm_local, [np.isnan(self.nwarm_local),], [lambda x:0, lambda x:x])
         self.nhot_local   = np.piecewise(self.nhot_local, [np.isnan(self.nhot_local),], [lambda x:0, lambda x:x])
         self.nwarm_global = self.nwarm_local*fvw
-        self.nhot_global  = self.nhot_local*(1-fvw)
+        self.nhot_global  = self.nhot_local*(1.-fvw)
         self.prs_warm     = self.nwarm_local*kB*self.TmedVW*np.exp(-self.sigW**2/2)
         self.prs_hot      = self.nhot_local*kB*unmod_T
         self.radius       = radius_ #kpc
@@ -194,7 +194,7 @@ class IsobarCoolRedistribution:
         unmod_n  = unmod_prsTh/(kB*unmod_T)  
         unmod_prsHTh = unmod_nH*kB*unmod_T
         
-        isobaric = 1
+        isobaric = 0
         tdyn  = np.sqrt(radius**3/(\
                (G*IsobarCoolRedistribution.UNIT_LENGTH**2*IsobarCoolRedistribution.UNIT_DENSITY/IsobarCoolRedistribution.UNIT_VELOCITY**2)\
                    *(self.unmodified.Halo.Mass(radius_)/IsobarCoolRedistribution.UNIT_MASS))) #code

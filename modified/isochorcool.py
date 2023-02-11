@@ -26,7 +26,7 @@ class IsochorCoolRedistribution:
     UNIT_ENERGY      = UNIT_MASS*(UNIT_LENGTH/UNIT_TIME)**2
     UNIT_TEMPERATURE = K
     
-    def __init__(self, unmodifiedProfile, TmedVW=3.e5, sig=0.3, cutoff=2):
+    def __init__(self, unmodifiedProfile, TmedVW=3.e5, sig=0.3, cutoff=4):
         self.TmedVW = TmedVW
         self.sig    = sig   # spread of unmodified temperature redistribution
         self.cutoff = cutoff
@@ -74,7 +74,7 @@ class IsochorCoolRedistribution:
         
         #Warm gas
         Tstart = 3.9
-        Tstop  = 6.5
+        Tstop  = 7.9
         Temp  = np.logspace(Tstart, Tstop, 20) #find tcool/tff for these temperature values
         fvw   = np.zeros_like(radius)
         fmw   = np.zeros_like(radius)
@@ -143,7 +143,7 @@ class IsochorCoolRedistribution:
         #epsilon  = 1e-6
         self.Tcut = Tcut
         self.rhowarm_local = unmod_rho*(fmw/fvw)
-        self.rhohot_local  = unmod_rho*((1-fmw)/(1-fvw)) 
+        self.rhohot_local  = unmod_rho*((1.-fmw)/(1.-fvw)) 
         self.nHwarm_local  = self.rhowarm_local*Xp(self.metallicity)/mH
         self.nHhot_local   = self.rhohot_local*Xp(self.metallicity)/mH
         

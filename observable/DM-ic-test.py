@@ -29,7 +29,7 @@ if(do_isothermal):
     TmedVH=1.5e6
     TmedVW=3.e5
     sig = 0.3
-    cutoff = 6.0
+    cutoff = 8.0
     THotM = TmedVH*np.exp(-sig**2/2)
     
     b = np.linspace(-90, 90, 50)
@@ -148,7 +148,7 @@ if(do_isentropic):
     ZrCGM = 0.3
     TmedVW = 3.e5
     sig = 0.3
-    cutoff = 4.0
+    cutoff = 8.0
     
     b = np.linspace(-90, 90, 50)
     l = np.linspace(0., 360, 51)
