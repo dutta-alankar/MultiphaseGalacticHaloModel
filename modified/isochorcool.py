@@ -75,7 +75,7 @@ class IsochorCoolRedistribution:
         #Warm gas
         Tstart = 3.9
         Tstop  = 7.9
-        Temp  = np.logspace(Tstart, Tstop, 20) #find tcool/tff for these temperature values
+        Temp  = np.logspace(Tstart, Tstop, 1000) #find tcool/tff for these temperature values
         fvw   = np.zeros_like(radius)
         fmw   = np.zeros_like(radius)
         Tcut  = np.zeros_like(radius)
@@ -218,7 +218,7 @@ class IsochorCoolRedistribution:
                 
         
         #Warm gas
-        Tstart = 4.1
+        Tstart = 3.9
         Tstop  = 7.9
         Temp  = np.logspace(Tstart, Tstop, 1000) #find tcool/tff for these temperature values
         fvw   = np.zeros_like(radius)
