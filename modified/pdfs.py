@@ -30,18 +30,20 @@ if(do_isothermal):
     THotM = TmedVH*np.exp(-sig**2/2)
     
     radius = np.linspace(9.0,250,30) #kpc
-    
+    rad = 5
     ionization = 'PIE'
    
     unmodified = IsothermalUnmodified(THot=THotM,
                           P0Tot=4580, alpha=1.9, sigmaTurb=60, 
                           M200=1e12, MBH=2.6e6, Mblg=6e10, rd=3.0, r0=8.5, C=12, 
                           redshift=0.001, ionization=ionization)
+    
+    ############################# Isochoric redistribution case
     mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
     
     nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, Tcut = mod_isochor.ProfileGen(radius)    
     
-    radius, fvw, fmw, Tcut = radius[5], fvw[5], fmw[5], Tcut[5]
+    radius, fvw, fmw, Tcut = radius[rad], fvw[rad], fmw[rad], Tcut[rad]
     fvw1 = fvw
     Tstart = 4.1
     Tstop  = 7.9
@@ -77,7 +79,7 @@ if(do_isothermal):
     
     nhot_local, nwarm_local, nhot_global, nwarm_global, fvw, fmw, prs_hot, prs_warm, Tcut = mod_isobar.ProfileGen(radius)    
     
-    radius, fvw, fmw, Tcut = radius[5], fvw[5], fmw[5], Tcut[5]
+    radius, fvw, fmw, Tcut = radius[rad], fvw[rad], fmw[rad], Tcut[rad]
     
     gvw = fvw*np.exp(-xp**2/(2*sigW**2))/(sigW*np.sqrt(2*pi))
             
