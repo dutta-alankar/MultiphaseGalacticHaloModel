@@ -1,0 +1,3 @@
+[submodule "submodules/AstroPlasma"]
+	path = submodules/AstroPlasma
+	url = https://github.com/dutta-alankar/AstroPlasma

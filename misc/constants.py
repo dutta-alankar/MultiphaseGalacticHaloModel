@@ -30,12 +30,13 @@ MSun   = 2.e33
 X_solar = 0.7154
 Y_solar = 0.2703
 Z_solar = 0.0143
-fracZ   = 0.5
-Xp      = X_solar*(1-fracZ*Z_solar)/(X_solar+Y_solar)
-Yp      = Y_solar*(1-fracZ*Z_solar)/(X_solar+Y_solar)
-Zp      = fracZ*Z_solar
+Xp = lambda metallicity: X_solar*(1-metallicity*Z_solar)/(X_solar+Y_solar)
+Yp = lambda metallicity: Y_solar*(1-metallicity*Z_solar)/(X_solar+Y_solar)
+Zp = lambda metallicity: metallicity*Z_solar
+'''
 mu     = 1./(2*Xp+0.75*Yp+0.5625*Zp)
 mup    = 1./(2*Xp+0.75*Yp+(9./16.)*Zp)
 muHp   = 1./Xp
 mue    = 2./(1+Xp)
 mui    = 1./(1/mu-1/mue)
+'''

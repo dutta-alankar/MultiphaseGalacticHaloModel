@@ -28,10 +28,6 @@ n = Model.ndens
 nH  = Model.nH #CGS
 
 isobaric = 0
-#LAMBDA = np.loadtxt('cooltable.dat')
-#LAMBDA = 10**np.loadtxt('../modified/hazy_coolingcurve_0.5.txt', skiprows=1)
-#LAMBDA = interpolate.interp1d(LAMBDA[:,0], LAMBDA[:,1])
-#tcool = lambda ndens, Temp:(4.34*(1.5+isobaric)*kB*Temp/(ndens*LAMBDA(Temp)))
 tcool = lambda ndens, nH, Temp, met:((1.5+isobaric)*ndens*kB*Temp/(nH*nH*cooling_approx(Temp, met)))
  
 fig = plt.figure()

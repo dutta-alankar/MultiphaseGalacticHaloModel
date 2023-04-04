@@ -9,14 +9,12 @@ Created on Sat Dec 10 15:38:22 2022
 import sys
 sys.path.append('..')
 import numpy as np
-from scipy import interpolate
-from misc.constants import *
+from misc.constants import kpc
 from unmodified.isoth import IsothermalUnmodified
 from unmodified.isent import IsentropicUnmodified
 from modified.isochorcool import IsochorCoolRedistribution
-from observable.ColumnDensity import ColumnDensity
+from observable.ColumnIon import ion_column
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import os
 
 '''
@@ -43,57 +41,59 @@ if(do_isothermal):
     b = np.linspace(9.0,250,200) #kpc
     
     # PIE
+    print('PIE')
     unmodified = IsothermalUnmodified(THot=THotM,
                           P0Tot=4580, alpha=1.9, sigmaTurb=60, 
                           M200=1e12, MBH=2.6e6, Mblg=6e10, rd=3.0, r0=8.5, C=12, 
                           redshift=0.001, ionization='PIE')
     mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
     
-    column = ColumnDensity(mod_isochor)
+    column = ion_column(mod_isochor)
     
     print('R_vir = %.2f kpc'%(mod_isochor.unmodified.Halo.r200*mod_isochor.unmodified.Halo.UNIT_LENGTH/kpc))    
     print("Evaluating Column densities...")
     
     print("NOVI_PIE")
-    NOVI_PIE    =  column.ColumnDensityGen(b, element=8, ion=6)
+    NOVI_PIE    =  column.gen_column(b, element=8, ion=6)
     np.save('./isoth/NOVI_PIE.npy', np.vstack( (b, NOVI_PIE) ).T)
     
     print("NNV_PIE")
-    NNV_PIE  =  column.ColumnDensityGen(b, element=7, ion=5)
+    NNV_PIE  =  column.gen_column(b, element=7, ion=5)
     np.save('./isoth/NNV_PIE.npy', np.vstack( (b, NNV_PIE) ).T)
     
     print("NOVII_PIE")
-    NOVII_PIE  =  column.ColumnDensityGen(b, element=8, ion=7)
+    NOVII_PIE  =  column.gen_column(b, element=8, ion=7)
     np.save('./isoth/NOVII_PIE.npy', np.vstack( (b, NOVII_PIE) ).T)
     
     print("NOVIII_PIE")
-    NOVIII_PIE  =  column.ColumnDensityGen(b, element=8, ion=8)
+    NOVIII_PIE  =  column.gen_column(b, element=8, ion=8)
     np.save('./isoth/NOVIII_PIE.npy', np.vstack( (b, NOVIII_PIE) ).T)
     
     # ------------------------------------------------------------------------------
     # CIE
+    print('CIE')
     unmodified = IsothermalUnmodified(THot=THotM,
                           P0Tot=4580, alpha=1.9, sigmaTurb=60, 
                           M200=1e12, MBH=2.6e6, Mblg=6e10, rd=3.0, r0=8.5, C=12, 
                           redshift=0.001, ionization='CIE')
     mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
     
-    column = ColumnDensity(mod_isochor)
+    column = ion_column(mod_isochor)
     
     print("NOVI_CIE")
-    NOVI_CIE    =  column.ColumnDensityGen(b, element=8, ion=6)
+    NOVI_CIE    =  column.gen_column(b, element=8, ion=6)
     np.save('./isoth/NOVI_CIE.npy', np.vstack( (b, NOVI_CIE) ).T)
     
     print("NNV_CIE")
-    NNV_CIE  =  column.ColumnDensityGen(b, element=7, ion=5)
+    NNV_CIE  =  column.gen_column(b, element=7, ion=5)
     np.save('./isoth/NNV_CIE.npy', np.vstack( (b, NNV_CIE) ).T)
     
     print("NOVII_CIE")
-    NOVII_CIE  =  column.ColumnDensityGen(b, element=8, ion=7)
+    NOVII_CIE  =  column.gen_column(b, element=8, ion=7)
     np.save('./isoth/NOVII_CIE.npy', np.vstack( (b, NOVII_CIE) ).T)
     
     print("NOVIII_CIE")
-    NOVIII_CIE  =  column.ColumnDensityGen(b, element=8, ion=8)
+    NOVIII_CIE  =  column.gen_column(b, element=8, ion=8)
     np.save('./isoth/NOVIII_CIE.npy', np.vstack( (b, NOVIII_CIE) ).T)
     '''
     print("Generating plots...")
@@ -162,53 +162,55 @@ if(do_isentropic):
     b = np.linspace(9.0,250,200) #kpc
     
     # PIE
+    print('PIE')
     unmodified = IsentropicUnmodified(nHrCGM=nHrCGM, TthrCGM=TthrCGM, sigmaTurb=sigmaTurb, ZrCGM=ZrCGM,
                                       redshift=0.001, ionization='PIE')
     mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
     
-    column = ColumnDensity(mod_isochor)
+    column = ion_column(mod_isochor)
     
     print('R_vir = %.2f kpc'%(mod_isochor.unmodified.Halo.r200*mod_isochor.unmodified.Halo.UNIT_LENGTH/kpc))    
     print("Evaluating Column densities...")
     
     print("NOVI_PIE")
-    NOVI_PIE    =  column.ColumnDensityGen(b, element=8, ion=6)
+    NOVI_PIE    =  column.gen_column(b, element=8, ion=6)
     np.save('./isent/NOVI_PIE.npy', np.vstack( (b, NOVI_PIE) ).T)
     
     print("NNV_PIE")
-    NNV_PIE  =  column.ColumnDensityGen(b, element=7, ion=5)
+    NNV_PIE  =  column.gen_column(b, element=7, ion=5)
     np.save('./isent/NNV_PIE.npy', np.vstack( (b, NNV_PIE) ).T)
     
     print("NOVII_PIE")
-    NOVII_PIE  =  column.ColumnDensityGen(b, element=8, ion=7)
+    NOVII_PIE  =  column.gen_column(b, element=8, ion=7)
     np.save('./isent/NOVII_PIE.npy', np.vstack( (b, NOVII_PIE) ).T)
     
     print("NOVIII_PIE")
-    NOVIII_PIE  =  column.ColumnDensityGen(b, element=8, ion=8)
+    NOVIII_PIE  =  column.gen_column(b, element=8, ion=8)
     np.save('./isent/NOVIII_PIE.npy', np.vstack( (b, NOVIII_PIE) ).T)
     
     # ------------------------------------------------------------------------------
     # CIE
+    print('CIE')
     unmodified = IsentropicUnmodified(nHrCGM=nHrCGM, TthrCGM=TthrCGM, sigmaTurb=sigmaTurb, ZrCGM=ZrCGM,
                                       redshift=0.001, ionization='CIE')
     mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
     
-    column = ColumnDensity(mod_isochor)
+    column = ion_column(mod_isochor)
     
     print("NOVI_CIE")
-    NOVI_CIE    =  column.ColumnDensityGen(b, element=8, ion=6)
+    NOVI_CIE    =  column.gen_column(b, element=8, ion=6)
     np.save('./isent/NOVI_CIE.npy', np.vstack( (b, NOVI_CIE) ).T)
     
     print("NNV_CIE")
-    NNV_CIE  =  column.ColumnDensityGen(b, element=7, ion=5)
+    NNV_CIE  =  column.gen_column(b, element=7, ion=5)
     np.save('./isent/NNV_CIE.npy', np.vstack( (b, NNV_CIE) ).T)
     
     print("NOVII_CIE")
-    NOVII_CIE  =  column.ColumnDensityGen(b, element=8, ion=7)
+    NOVII_CIE  =  column.gen_column(b, element=8, ion=7)
     np.save('./isent/NOVII_CIE.npy', np.vstack( (b, NOVII_CIE) ).T)
     
     print("NOVIII_CIE")
-    NOVIII_CIE  =  column.ColumnDensityGen(b, element=8, ion=8)
+    NOVIII_CIE  =  column.gen_column(b, element=8, ion=8)
     np.save('./isent/NOVIII_CIE.npy', np.vstack( (b, NOVIII_CIE) ).T)    
     '''
     axs[0, 1].grid()
