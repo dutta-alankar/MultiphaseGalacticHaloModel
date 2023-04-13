@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "multiphase-galactic-halo-model"
+version = "0.1.0"
+description = "Extension of Faermann et al 2017, 2018 models of Galactic halo with fluctuations creating co-spatial multiphase gas."
+authors = ["dutta-alankar <dutta.alankar@gmail.com>, mukeshrri <msbisht@rrimail.rri.res.in>, prats7up <prateek@iisc.ac.in>, RitaliG <ritalighosh@iisc.ac.in>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "multiphase_galactic_halo_model"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "^2.28.2"
+numpy = "^1.24.1"
+h5py = "^3.7.0"
+urllib3 = "^1.26.14"
+python-dotenv = "^0.21.0"
+scipy = "1.9.3"
+tqdm = "^4.65.0"
+matplotlib = "^3.7.1"
+emcee = {version = "^3.1.4", optional = true, extras = ["mpi4py"]}
+colorama = "^0.4.6"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

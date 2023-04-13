@@ -7,16 +7,19 @@ Created on Sat Dec  4 12:31:46 2021
 """
 
 import numpy as np
-import observable.CoordinateTrans as transform
-from misc.constants import *
+from misc.template import modified_field
+from typing import Union, Tuple
+from misc.constants import kpc
 
 class MapInit(object):
     
-    def __init__(self, redisProf):
+    def __init__(self: "MapInit", redisProf: "modified_field") -> None:
         self.redisProf = redisProf
         
-    def prepare(self, l, b):
-        R200 = self.redisProf.unmodified.Halo.r200*(self.redisProf.unmodified.Halo.__class__.UNIT_LENGTH/kpc)
+    def prepare(self: "MapInit", 
+                l: Union[float, list, np.ndarray], 
+                b: Union[float, list, np.ndarray]) -> Tuple[Union[float, list, np.ndarray]]:
+        R200 = self.redisProf.unmodified.Halo.r200*(self.redisProf.unmodified.Halo.UNIT_LENGTH/kpc)
         
         if isinstance(l, list) : 
             L = np.array(l)

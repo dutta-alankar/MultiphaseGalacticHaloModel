@@ -7,8 +7,11 @@ Created on Sat Dec  4 16:49:11 2021
 """
 
 import numpy as np
+from typing import Union, Tuple
 
-def toGalC(l, b, distance):
+def toGalC(l: Union[float, list, np.ndarray], 
+           b: Union[float, list, np.ndarray], 
+           distance: Union[float, list, np.ndarray]) -> Tuple[Union[float, list, np.ndarray]]:
     """
     Convert galactocentric position wrt Sun to that wrt Galaxy center
 
@@ -66,7 +69,9 @@ def toGalC(l, b, distance):
     
     return (radius, phi, theta)
 
-def toSunC(phi, theta, distance):
+def toSunC(phi: Union[float, list, np.ndarray], 
+           theta: Union[float, list, np.ndarray], 
+           distance: Union[float, list, np.ndarray]) -> Tuple[Union[float, list, np.ndarray]]:
     """
     Convert galactocentric position wrt Galaxy center to Sun
 
@@ -125,7 +130,8 @@ def toSunC(phi, theta, distance):
     
     return (radius, l, b)
 
-def AngFromGC(l, b):
+def AngFromGC(l: Union[float, list, np.ndarray], 
+              b: Union[float, list, np.ndarray]) -> Tuple[Union[float, list, np.ndarray]]:
     """
     Calculates angular distance from galactic center for a given (l,b)
 

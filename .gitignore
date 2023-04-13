@@ -140,6 +140,9 @@ auto/
 .log
 
 # repo specific database files
+.pickle
+.npy
+.npz
 misc/ionization_CIE
 misc/ionization_PIE
 misc/datagen/emmSpec/*.exe
@@ -165,3 +168,6 @@ misc/datagen/coolingFunction/*.out
 modified/auto
 modified/auto/*.in
 modified/*.exe
+tests/unmodified/figures/*.png
+tests/modified/figures/*.png
+tests/observables/figures/*.png

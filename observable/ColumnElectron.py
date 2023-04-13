@@ -8,6 +8,7 @@ Created on Sat Dec 24 13:56:00 2022
 
 import sys
 import numpy as np
+from typing import Union
 from scipy.interpolate import interp1d
 # from scipy.integrate import simpson
 sys.path.append('..')
@@ -16,10 +17,10 @@ from astro_plasma import Ionization
 from observable.ColumnDensity import ColumnDensity
 
 class electron_column(ColumnDensity):
-    def _additional_fields(self, indx, r_val):
+    def _additional_fields(self: "electron_column", indx: int, r_val: float) -> None:
         mode = self.redisProf.ionization
         redshift = self.redisProf.redshift
-        num_dens = Ionization().interpolate_num_dens
+        num_dens = Ionization.interpolate_num_dens
         
         if not(hasattr(self, 'neHot')):
             self.neHot = np.zeros_like(self.nHhot) 
@@ -43,13 +44,13 @@ class electron_column(ColumnDensity):
                                                  self.metallicity(r_val), redshift, 
                                                  mode=mode, part_type='electron' ) for i in range(self.Temp.shape[0])])
         
-        hotInt  = (1-self.fvw(r_val))*np.trapz( (self.neHot[indx,:]*gvhT, xh) ) # global density sensitive     
-        warmInt = self.fvw(r_val)*np.trapz( (self.neWarm[indx,:]*gvwT, xw) )
+        hotInt  = np.trapz( (self.neHot[indx,:]*gvhT, xh) ) # global density sensitive (1-self.fvw(r_val)) 
+        warmInt = np.trapz( (self.neWarm[indx,:]*gvwT, xw) ) # self.fvw(r_val)*
         self.ne[indx] = hotInt + warmInt
         
-    def _interpolate_additional_fields(self):
+    def _interpolate_additional_fields(self: "electron_column"):
         self.ne = interp1d( self.radius, self.ne, fill_value='extrapolate')
         
-    def gen_column(self, b_):
+    def gen_column(self: "electron_column", b_: Union[list, np.ndarray, float, int]) -> np.ndarray:
         return super().gen_column(b_, 'ne')
       
