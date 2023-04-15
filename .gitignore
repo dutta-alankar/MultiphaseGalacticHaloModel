@@ -140,9 +140,11 @@ auto/
 .log
 
 # repo specific database files
-.pickle
-.npy
-.npz
+*.pickle
+*.npy
+*.npz
+*.h5
+*.hdf5
 misc/ionization_CIE
 misc/ionization_PIE
 misc/datagen/emmSpec/*.exe

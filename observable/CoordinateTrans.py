@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Sat Dec  4 16:49:11 2021
@@ -9,9 +8,12 @@ Created on Sat Dec  4 16:49:11 2021
 import numpy as np
 from typing import Union, Tuple
 
-def toGalC(l: Union[float, list, np.ndarray], 
-           b: Union[float, list, np.ndarray], 
-           distance: Union[float, list, np.ndarray]) -> Tuple[Union[float, list, np.ndarray]]:
+
+def toGalC(
+    l: Union[float, int, list, np.ndarray],
+    b: Union[float, int, list, np.ndarray],
+    distance: Union[float, int, list, np.ndarray],
+) -> tuple:
     """
     Convert galactocentric position wrt Sun to that wrt Galaxy center
 
@@ -34,44 +36,32 @@ def toGalC(l: Union[float, list, np.ndarray],
         Polar angle in degree wrt Galaxy center.
 
     """
-    if isinstance(l, list) : 
-        L = np.array(l)
-    elif isinstance(l, np.ndarray):
-        L = np.copy(l)
-    else:
-        L = l
-        
-    if isinstance(b, list) : 
-        B = np.array(b)
-    elif isinstance(b, np.ndarray):
-        B = np.copy(b)
-    else:
-        B = b
-        
-    if isinstance(distance, list) : 
-        Distance = np.array(distance)
-    elif isinstance(distance, np.ndarray):
-        Distance = np.copy(distance)
-    else:
-        Distance = distance
-            
-    phi   = np.deg2rad(L)
-    theta = np.pi/2-np.deg2rad(B)
-    SuntoGC = 8.0 #kpc
-    xgc = Distance*np.sin(theta)*np.cos(phi) - SuntoGC
-    ygc = Distance*np.sin(theta)*np.sin(phi)
-    zgc = Distance*np.cos(theta)
-    
+    L = np.array(l)
+    B = np.array(b)
+    Distance = np.array(distance)
+
+    phi = np.deg2rad(L)
+    theta = np.pi / 2 - np.deg2rad(B)
+    SuntoGC = 8.0  # kpc
+    xgc = Distance * np.sin(theta) * np.cos(phi) - SuntoGC
+    ygc = Distance * np.sin(theta) * np.sin(phi)
+    zgc = Distance * np.cos(theta)
+
     radius = np.sqrt(xgc**2 + ygc**2 + zgc**2)
-    phi    = np.rad2deg(np.arctan2(ygc, xgc))
-    theta  = np.rad2deg(np.arccos(zgc/radius)) 
-    phi    = np.select([ygc>0,ygc<0], [phi, 360+phi])   #np.select([xgc*ygc<0,xgc*ygc>0], [phi+180, phi])   
-    
+    phi = np.rad2deg(np.arctan2(ygc, xgc))
+    theta = np.rad2deg(np.arccos(zgc / radius))
+    phi = np.select(
+        [ygc > 0, ygc < 0], [phi, 360 + phi]
+    )  # np.select([xgc*ygc<0,xgc*ygc>0], [phi+180, phi])
+
     return (radius, phi, theta)
 
-def toSunC(phi: Union[float, list, np.ndarray], 
-           theta: Union[float, list, np.ndarray], 
-           distance: Union[float, list, np.ndarray]) -> Tuple[Union[float, list, np.ndarray]]:
+
+def toSunC(
+    phi: Union[float, list, np.ndarray],
+    theta: Union[float, list, np.ndarray],
+    distance: Union[float, list, np.ndarray],
+) -> tuple:
     """
     Convert galactocentric position wrt Galaxy center to Sun
 
@@ -94,44 +84,29 @@ def toSunC(phi: Union[float, list, np.ndarray],
         b in degree wrt Solar center.
 
     """
-    if isinstance(phi, list) : 
-        Phi = np.array(phi)
-    elif isinstance(phi, np.ndarray):
-        Phi = np.copy(phi)
-    else:
-        Phi = phi
-        
-    if isinstance(theta, list) : 
-        Theta = np.array(theta)
-    elif isinstance(theta, np.ndarray):
-        Theta = np.copy(theta)
-    else:
-        Theta = theta
-        
-    if isinstance(distance, list) : 
-        Distance = np.array(distance)
-    elif isinstance(distance, np.ndarray):
-        Distance = np.copy(distance)
-    else:
-        Distance = distance
-        
-    Phi   = np.deg2rad(Phi)
+    Phi = np.array(phi)
+    Theta = np.array(theta)
+    Distance = np.array(distance)
+
+    Phi = np.deg2rad(Phi)
     Theta = np.deg2rad(Theta)
-    SuntoGC = -8.0 #kpc
-    xsc = Distance*np.sin(Theta)*np.cos(Phi) - SuntoGC
-    ysc = Distance*np.sin(Theta)*np.sin(Phi)
-    zsc = Distance*np.cos(Theta)
-    
+    SuntoGC = -8.0  # kpc
+    xsc = Distance * np.sin(Theta) * np.cos(Phi) - SuntoGC
+    ysc = Distance * np.sin(Theta) * np.sin(Phi)
+    zsc = Distance * np.cos(Theta)
+
     radius = np.sqrt(xsc**2 + ysc**2 + zsc**2)
-    phi    = np.rad2deg(np.arctan2(ysc, xsc))
-    theta  = np.rad2deg(np.arccos(zsc/radius)) 
-    l = phi
-    b = 90-theta
-    
+    phi = np.rad2deg(np.arctan2(ysc, xsc))
+    theta = np.rad2deg(np.arccos(zsc / radius))
+    l = np.array(phi)
+    b = 90 - np.array(theta)
+
     return (radius, l, b)
 
-def AngFromGC(l: Union[float, list, np.ndarray], 
-              b: Union[float, list, np.ndarray]) -> Tuple[Union[float, list, np.ndarray]]:
+
+def AngFromGC(
+    l: Union[float, list, np.ndarray], b: Union[float, list, np.ndarray]
+) -> Tuple[Union[float, list, np.ndarray]]:
     """
     Calculates angular distance from galactic center for a given (l,b)
 
@@ -148,17 +123,6 @@ def AngFromGC(l: Union[float, list, np.ndarray],
         angular distance from galactic center in degree.
 
     """
-    if isinstance(l, list) : 
-        L = np.array(l)
-    elif isinstance(l, np.ndarray):
-        L = np.copy(l)
-    else:
-        L = l
-        
-    if isinstance(b, list) : 
-        B = np.array(b)
-    elif isinstance(b, np.ndarray):
-        B = np.copy(b)
-    else:
-        B = b
-    return np.rad2deg( np.arccos( np.cos(np.deg2rad(L)) * np.cos(np.deg2rad(B)) ) )
+    L = np.array(l)
+    B = np.array(b)
+    return np.rad2deg(np.arccos(np.cos(np.deg2rad(L)) * np.cos(np.deg2rad(B))))
