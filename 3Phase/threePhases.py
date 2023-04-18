@@ -4,20 +4,16 @@ Created on Wed Oct 26 15:31:45 2022
 
 @author: prateek and alankar
 """
+import sys
 
+sys.path.append("..")
 from misc.coolLambda import cooling_approx
 import numpy as np
+import os
 
-# import matplotlib.pyplot as plt
-
-
-def N_pdf(x, mu, sig):
-    return (
-        1.0
-        / (np.sqrt(2 * np.pi) * sig)
-        * np.exp(-(x - mu) * (x - mu) / (2.0 * sig * sig))
-    )
-
+N_pdf = lambda x, mu, sig: (1.0 / (np.sqrt(2 * np.pi) * sig)) * np.exp(
+    -(x - mu) * (x - mu) / (2.0 * sig * sig)
+)
 
 Z0 = 1.0
 ZrCGM = 0.3
@@ -31,7 +27,7 @@ metallicity = (
 
 T = np.logspace(3.0, 8.0, 1000)
 
-params = np.load("params_sol.npy")
+# params = np.load('./figures/params_sol.npy')
 
 # f_Vh = params[3]
 # f_Vw = params[4]
@@ -49,21 +45,21 @@ params = np.load("params_sol.npy")
 # sig_w = params[6]
 # sig_c = params[7]
 
-f_Vh = 0.968
-f_Vw = 0.026
+f_Vh = 0.938
+f_Vw = 0.060
 f_Vc = 1 - (f_Vh + f_Vw)
 
-sig_u = 0.7
-T_u = 10.0**6.370
+sig_u = 0.495
+T_u = 10.0**5.754
 T_u_M = T_u * np.exp(-(sig_u**2) / 2)
 
-sig_h = 0.665
-sig_w = 1.162
-sig_c = 0.299
+T_h = T_u  # 10.**5.8
+T_w = 10**5.269
+T_c = 10.0**4.102
 
-T_h = T_u
-T_w = 10**5.385
-T_c = 10.0**4.237
+sig_h = 0.495
+sig_w = 1.054
+sig_c = 0.300
 
 # T_h = 10**6.4
 # T_w = 10**5.2
@@ -89,14 +85,12 @@ np.save(
     "parameters.npy",
     np.array([f_Vh, f_Vw, f_Vc, x_h, x_w, x_c, sig_h, sig_w, sig_c, T_u]),
 )
-
 # print('V_pdf norm', np.trapz(V_pdf/T, T))
 
-# plt.semilogy(np.log10(T),V_pdf,'--',color='tab:blue',label='volume PDF')
 
-del_h = 0.3
-del_w = 0.3
-del_c = 0.3
+del_h = 1.1
+del_w = 1e-4
+del_c = 2e-3
 
 beta_h = (
     del_h
@@ -155,7 +149,6 @@ M_pdf_m += (
     * N_pdf(x, x_c - (1 - del_c) * sig_c * sig_c, sig_c)
 )
 M_pdf_m *= rho_av_u / rho_av
-# plt.semilogy(np.log10(T),M_pdf_m, '--',color='tab:orange',label='mass PDF')
 
 # using exact luminosity function
 hot_lum = (
@@ -184,8 +177,6 @@ cold_lum = (
 L_pdf_m += cold_lum
 L_pdf_m /= np.trapz(L_pdf_m, x)
 
-# plt.semilogy(np.log10(T),L_pdf_m, '--', color='tab:green', label='luminosity PDF')
-
 f_Lh = np.trapz(hot_lum, x)
 f_Lw = np.trapz(warm_lum, x)
 f_Lc = np.trapz(cold_lum, x)
@@ -194,24 +185,5 @@ f_Lh = f_Lh / Den
 f_Lw = f_Lw / Den
 f_Lc = f_Lc / Den
 
-np.save(
-    "3PhasePdf-LogTu=%.1fK.npy" % np.log10(T_u),
-    np.vstack((np.log10(T), V_pdf, M_pdf_m, L_pdf_m)).T,
-)
-
-# print("luminosity fractions, hot, warm, cold:", f_Lh, f_Lw, f_Lc)
-
-# plt.ylim([10**-3,3.*10**0])
-# plt.xlim([3.8,7.5])
-# plt.legend()
-# plt.show()
-# plt.grid()
-# plt.xlabel(r'$\log_{10}(T[K])$')
-# plt.ylabel(r'$T \mathscr{P}(T)$')
-# plt.title(r'volume, mass, luminosity PDFs for $\delta=0.3$')
-# plt.text(5.1,6.e-3,'solid lines from TNG50 halo')
-
-# D = np.loadtxt('tng50-pdf-data.txt')
-# plt.plot(D[:,0],D[:,1],color='tab:blue')
-# plt.plot(D[:,0],D[:,2],color='tab:orange')
-# plt.plot(D[:,0],D[:,3],color='tab:green')
+os.system("mkdir -p ./figures")
+np.save("./figures/3PhasePdf.npy", np.vstack((np.log10(T), V_pdf, M_pdf_m, L_pdf_m)).T)

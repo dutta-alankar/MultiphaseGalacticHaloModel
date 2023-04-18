@@ -48,7 +48,7 @@ radius = 20.0  # kpc
 TmedVW = 3.0e5
 sig = 0.3
 cutoff = 4.0
-redshift = 0.001
+redshift = 0.2
 
 
 def gen_PDF(unmod, ionization):

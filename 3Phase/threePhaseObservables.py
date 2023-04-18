@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Mon Jan  2 17:42:10 2023
@@ -16,13 +17,9 @@ from misc.HaloModel import HaloModel
 from misc.ColDensCOSData import observedColDens
 from misc.constants import *
 
-
-def N_pdf(x, mu, sig):
-    return (
-        1.0
-        / (np.sqrt(2 * np.pi) * sig)
-        * np.exp(-(x - mu) * (x - mu) / (2.0 * sig * sig))
-    )
+N_pdf = lambda x, mu, sig: (1.0 / (np.sqrt(2 * np.pi) * sig)) * np.exp(
+    -(x - mu) * (x - mu) / (2.0 * sig * sig)
+)
 
 
 def abundance(element):
@@ -42,18 +39,9 @@ X_solar = 0.7154
 Y_solar = 0.2703
 Z_solar = 0.0143
 
-
-def Xp(metallicity):
-    return X_solar * (1 - metallicity * Z_solar) / (X_solar + Y_solar)
-
-
-def Yp(metallicity):
-    return Y_solar * (1 - metallicity * Z_solar) / (X_solar + Y_solar)
-
-
-def Zp(metallicity):
-    return metallicity * Z_solar  # Z varied independent of nH and nHe
-
+Xp = lambda metallicity: X_solar * (1 - metallicity * Z_solar) / (X_solar + Y_solar)
+Yp = lambda metallicity: Y_solar * (1 - metallicity * Z_solar) / (X_solar + Y_solar)
+Zp = lambda metallicity: metallicity * Z_solar  # Z varied independent of nH and nHe
 
 Z0 = 1.0
 ZrCGM = 0.3
@@ -139,11 +127,12 @@ column_length = 2 * np.sqrt(r200**2 - b**2)
 
 
 def IonColumn(element, ion, name, ylim=None, fignum=None, color=None):
-    if fignum is None:
+    fig = None
+    if fignum == None:
         plt.figure(figsize=(13, 10))
     else:
-        plt.figure(num=fignum, figsize=(13, 10))
-    if color is None:
+        fig = plt.figure(num=fignum, figsize=(13, 10))
+    if color == None:
         color = "tab:blue"
 
     NIon = np.nan_to_num(nIon_avg(element, ion, mode) * column_length * kpc)  # cm^-2
@@ -198,7 +187,7 @@ def IonColumn(element, ion, name, ylim=None, fignum=None, color=None):
 
     plt.xscale("log")
     plt.yscale("log")
-    if ylim is not None:
+    if ylim != None:
         plt.ylim(*ylim)
     plt.xlim(6e-2, 1.2)
     plt.xlabel(r"$b/R_{vir}$", size=28)
@@ -211,8 +200,8 @@ def IonColumn(element, ion, name, ylim=None, fignum=None, color=None):
     # set the linewidth of each legend object
     # for legobj in leg.legendHandles:
     # leg.set_title("Column density predicted by three phase model",prop={'size':20})
-    if fignum is None:
-        plt.legend(loc="upper right", ncol=1, fancybox=True, fontsize=25)
+    if fignum == None:
+        leg = plt.legend(loc="upper right", ncol=1, fancybox=True, fontsize=25)
         plt.savefig("./N_%s-3p.png" % name, transparent=True)
         # plt.show()
         plt.close()

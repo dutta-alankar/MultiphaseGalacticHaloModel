@@ -17,9 +17,10 @@ python-dotenv = "^0.21.0"
 scipy = "1.9.3"
 tqdm = "^4.65.0"
 matplotlib = "^3.7.1"
-emcee = {version = "^3.1.4", optional = true, extras = ["mpi4py"]}
 colorama = "^0.4.6"
 mypy = "^1.2.0"
+corner = "^2.2.2"
+emcee = {version = "^3.1.4", extras = ["mpi4py"]}
 
 [build-system]
 requires = ["poetry-core"]

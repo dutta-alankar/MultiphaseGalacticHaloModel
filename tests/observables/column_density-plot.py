@@ -81,16 +81,16 @@ def plot_column_density(unmod, mod, ion):
 if __name__ == "__main__":
     unmod = ["isoth", "isent"]
     mod = ["isochor", "isobar"]
-    ion = ["NV"]  # , "NV"]
+    ion = "NV"  # "OVI"
 
     plt.figure(figsize=(13, 10))
 
-    for condition in product(unmod, mod, ion):
-        plot_column_density(*condition)
+    for condition in product(unmod, mod):
+        plot_column_density(*condition, ion)
 
     observation = observedColDens()
 
-    element = "N V"
+    element = "N V" if ion == "NV" else "O VI"
     (
         gal_id_min,
         gal_id_max,
@@ -137,4 +137,4 @@ if __name__ == "__main__":
     plt.ylabel(r"Column density ($cm^{-2}$)")
     plt.xlim(xmin=0.05, xmax=1.1)
     plt.ylim(ymin=10**11.7, ymax=10.0**15.3)
-    plt.savefig(f"figures/column_density{ion}.png", transparent=False)
+    plt.savefig(f"figures/column_density_{ion}.png", transparent=False)

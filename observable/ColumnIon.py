@@ -143,18 +143,18 @@ class ion_column(ColumnDensity):
             ]
         )
 
-        hotInt = np.trapz(
+        hotInt = (1 - self.fvw(r_val)) * np.trapz(
             (self.mu_hot[indx, :] * self.prs_hot(r_val) / (kB * self.Temp))
             * self.fIonHot[indx, :]
             * gvhT,
             xh,
-        )  # Global density sensitive (1-self.fvw(r_val))*
-        warmInt = np.trapz(
+        )  # Global density sensitive The extra volume fraction factor is due to that
+        warmInt = self.fvw(r_val) * np.trapz(
             (self.mu_warm[indx, :] * self.prs_warm(r_val) / (kB * self.Temp))
             * self.fIonWarm[indx, :]
             * gvwT,
             xw,
-        )  # self.fvw(r_val)*
+        )  #
 
         self.nIon[indx] = (
             a0

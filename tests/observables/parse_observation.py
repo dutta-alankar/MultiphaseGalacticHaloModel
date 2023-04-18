@@ -34,25 +34,26 @@ class observedColDens:
             galaxies.append(line[:17].strip())
             names.append(line[29:35])
             impact.append(float(line[25:28]))
-            if line[78] == " ":
-                limit.append("e")
-            elif line[78] == "<":
-                limit.append("l")
-            elif line[78] == ">":
-                limit.append("g")
-            if line[80:85] != "     ":
-                coldens.append(float(line[80:85]))
-                if limit[-1] == "e":
-                    e_coldens.append(float(line[86:90]))
-                else:
-                    e_coldens.append(0.0)
+            if len(line) > 78:
+                if line[78] == " ":
+                    limit.append("e")
+                elif line[78] == "<":
+                    limit.append("l")
+                elif line[78] == ">":
+                    limit.append("g")
+                if line[80:85] != "     ":
+                    coldens.append(float(line[80:85]))
+                    if limit[-1] == "e":
+                        e_coldens.append(float(line[86:90]))
+                    else:
+                        e_coldens.append(0.0)
             else:
                 if line[62] == " ":
-                    limit[-1] = "e"
+                    limit.append("e")
                 elif line[62] == "<":
-                    limit[-1] = "l"
+                    limit.append("l")
                 elif line[62] == ">":
-                    limit[-1] = "g"
+                    limit.append("g")
                 coldens.append(float(line[64:69]))
                 if limit[-1] == "e":
                     e_coldens.append(float(line[70:74]))

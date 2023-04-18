@@ -185,6 +185,26 @@ test = ["Pillow", "matplotlib", "pytest"]
 test-no-images = ["pytest"]
 
 [[package]]
+name = "corner"
+version = "2.2.2"
+description = "Make some beautiful corner plots"
+category = "main"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "corner-2.2.2-py3-none-any.whl", hash = "sha256:e7577cdb59cfa304effa243b0c7ac0e3777030d3dc2f2e217a387e87a47074bb"},
+    {file = "corner-2.2.2.tar.gz", hash = "sha256:4bc79f3b6778c270103f0926e64ef2606c48c3b6f92daf5382fc4babf5d608d1"},
+]
+
+[package.dependencies]
+matplotlib = ">=2.1"
+
+[package.extras]
+arviz = ["arviz (>=0.9)"]
+docs = ["arviz (>=0.9)", "ipython", "myst-nb", "pandoc", "sphinx (>=1.7.5)", "sphinx-book-theme"]
+test = ["arviz (>=0.9)", "pytest", "scipy"]
+
+[[package]]
 name = "cycler"
 version = "0.11.0"
 description = "Composable style cycles"
@@ -201,7 +221,7 @@ name = "emcee"
 version = "3.1.4"
 description = "The Python ensemble sampling toolkit for MCMC"
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "emcee-3.1.4-py2.py3-none-any.whl", hash = "sha256:13d216a96b4f60661839d5f6ec482eda9e86b499502cda2bf6d8cc839ccf3e59"},
@@ -839,4 +859,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "2e412258e53928cc8dc94ff2325716eb0df8846238c4b24522e360e0501c8bdb"
+content-hash = "06a3acd5e286bfc835eac95038a7eb75bc4132fb9492f72fb5e0c9cd34b4e57d"

@@ -14,12 +14,14 @@ import numpy as np
 import pickle
 from typing import Union, Optional
 from itertools import product
+from misc.constants import kpc
 from unmodified.isoth import IsothermalUnmodified
 from unmodified.isent import IsentropicUnmodified
 from modified.isochorcool import IsochorCoolRedistribution
 from modified.isobarcool import IsobarCoolRedistribution
 from observable.DispersionMeasure import DispersionMeasure as DM
 from observable.EmissionMeasure import EmissionMeasure as EM
+from observable.disk_measures import DiskDM, DiskEM
 from misc.template import unmodified_field, modified_field
 
 
@@ -38,7 +40,7 @@ def gen_measure(
     cutoff = 4.0
     TmedVW = 3.0e5
     sig = 0.3
-    redshift = 0.001
+    redshift = 0.2
 
     unmodified: Optional[unmodified_field] = None
     if unmod == "isoth":
@@ -83,25 +85,28 @@ def gen_measure(
     else:
         map_val = EM(modified).make_map(l, b, showProgress=showProgress)
 
+    rvir = unmodified.Halo.r200 * (unmodified.Halo.UNIT_LENGTH / kpc)
+
+    if map_type == "dispersion":
+        disk = DiskDM(rvir=rvir).make_map(l, b, showProgress=showProgress)
+    else:
+        disk = DiskEM(rvir=rvir).make_map(l, b, showProgress=showProgress)
+
     with open(f"figures/map_{map_type}_{unmod}_{mod}_{ionization}.pickle", "wb") as f:
         data = {
             "l": l,
             "b": b,
             "map": map_val,
+            "disk": disk,
         }
+        # print(list(data.keys()))
         pickle.dump(data, f)
 
 
 if __name__ == "__main__":
-    unmod = [
-        "isent",
-    ]  # "isent"]
-    mod = [
-        "isobar",
-    ]  # "isobar"]
-    ionization = [
-        "CIE",
-    ]  # "CIE"]
+    unmod = ["isent", "isoth"]
+    mod = ["isobar", "isochor"]
+    ionization = ["CIE", "PIE"]
 
     b = np.linspace(-90, 90, 50)
     l = np.linspace(0.0, 360, 51)
@@ -158,7 +163,7 @@ if __name__ == "__main__":
     unmodified = IsothermalUnmodified(THot=THotM,
                           P0Tot=4580, alpha=1.9, sigmaTurb=60,
                           M200=1e12, MBH=2.6e6, Mblg=6e10, rd=3.0, r0=8.5, C=12,
-                          redshift=0.001, ionization='CIE')
+                          redshift=0.2, ionization='CIE')
     mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
 
     dispersion_CIE = DM(mod_isochor).generate(l, b, showProgress=showProgress)
@@ -224,7 +229,7 @@ if(do_isentropic):
 
     # PIE
     unmodified = IsentropicUnmodified(nHrCGM=nHrCGM, TthrCGM=TthrCGM, sigmaTurb=sigmaTurb, ZrCGM=ZrCGM,
-                                      redshift=0.001, ionization='PIE')
+                                      redshift=0.2, ionization='PIE')
     mod_isochor = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
 
     dispersion_PIE = DM(mod_isochor).generate(l, b, showProgress=showProgress)

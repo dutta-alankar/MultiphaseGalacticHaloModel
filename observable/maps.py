@@ -12,9 +12,14 @@ from misc.constants import kpc
 
 
 class MapInit(object):
-    def __init__(self: "MapInit", redisProf: "modified_field") -> None:
+    def __init__(
+        self: "MapInit",
+        redisProf: Optional["modified_field"] = None,
+        rvir: Optional[float] = None,
+    ) -> None:
         self.redisProf = redisProf
         self.integrateTill: Optional[np.ndarray] = None
+        self.rvir = rvir  # kpc
 
     def prepare(
         self: "MapInit",
@@ -24,11 +29,14 @@ class MapInit(object):
         L = np.array(l)
         B = np.array(b)
 
-        R200 = (
-            self.redisProf.unmodified.Halo.r200
-            * (self.redisProf.unmodified.Halo.UNIT_LENGTH / kpc)
-            * np.ones_like(L)
-        )
+        if self.rvir is None:
+            R200 = (
+                self.redisProf.unmodified.Halo.r200
+                * (self.redisProf.unmodified.Halo.UNIT_LENGTH / kpc)
+                * np.ones_like(L)
+            )
+        else:
+            R200 = self.rvir * np.ones_like(L)
         if L.ndim == 1 or B.ndim == 1:
             L, B = np.meshgrid(np.array(L), np.array(B))
 

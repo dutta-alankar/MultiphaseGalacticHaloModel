@@ -5,10 +5,11 @@ Created on Mon Jan  2 16:55:40 2023
 @author: alankar
 """
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 
 # See illustris-analysis/diff-emm-plot_data.py in https://github.com/dutta-alankar/cooling-flow-model.git
-tng50 = np.loadtxt("tng50-pdf-data.txt")
+tng50 = np.loadtxt("./Illustris-TNG50-1/tng50-pdf-data.txt")
 
 plt.figure(figsize=(13, 10))
 plt.plot(
@@ -33,8 +34,7 @@ plt.plot(
     linestyle="--",
 )
 
-T_u = 10.0**6.4
-phases_data = np.load("3PhasePdf-LogTu=%.1fK.npy" % np.log10(T_u))
+phases_data = np.load("./figures/3PhasePdf.npy")
 
 Temperature = 10.0 ** phases_data[:, 0]
 V_pdf = phases_data[:, 1]
@@ -54,9 +54,9 @@ plt.ylabel(r"$T \mathscr{P}(T)$", size=28)
 leg = plt.legend(loc="upper right", ncol=3, fancybox=True, fontsize=24, framealpha=0.5)
 plt.tick_params(axis="both", which="major", length=12, width=3, labelsize=24)
 plt.tick_params(axis="both", which="minor", length=8, width=2, labelsize=22)
-plt.grid()
 plt.tight_layout()
 # leg.set_title("Three phase PDF compared with a typical Illustris TNG50 Halo PDF", prop={'size':20})
-plt.savefig("./3-phase-pdf.png", transparent=True)
-plt.show()
+os.system("mkdir -p ./figures")
+plt.savefig("./figures/3-phase-pdf.png", transparent=False)
+# plt.show()
 plt.close()

@@ -44,7 +44,7 @@ class Measure(maps.MapInit, ABC):
             rend = (
                 1.01
                 * self.redisProf.unmodified.rCGM
-                * (self.redisProf.unmodified.__class__.UNIT_LENGTH / kpc)
+                * (self.redisProf.unmodified.UNIT_LENGTH / kpc)
             )
             print("Doing one time profile calculation", flush=True)
             radius_ = np.logspace(np.log10(5.0), np.log10(rend), 20)  # kpc

@@ -24,9 +24,11 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
         f"figures/map_{map_type}_{unmod}_{mod}_{ionization}.pickle", "rb"
     ) as data_file:
         data = pickle.load(data_file)
+        # print(list(data.keys()))
         l = data["l"]
         b = data["b"]
         map_val = data["map"]
+        disk_val = data["disk"]
 
     l_plot = np.deg2rad(np.arange(0, 360, 45))
     b_plot = np.deg2rad(np.arange(-90, -25, 30))
@@ -51,7 +53,7 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     cs = ax.contourf(
         np.deg2rad(l),
         np.deg2rad(b),
-        map_val * (1e3 if map_type == "emission" else 1.0),
+        (map_val + disk_val) * (1e3 if map_type == "emission" else 1.0),
         levels=levels,
         cmap="YlOrRd_r",
     )
@@ -70,13 +72,14 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     cs = ax.pcolormesh(
         np.deg2rad(l_mod),
         np.deg2rad(b),
-        map_val * (1e3 if map_type == "emission" else 1.0),
+        (map_val + disk_val)
+        * (1e3 if map_type == "emission" else 1.0),  # in units of 1e-3 cm^-6 pc
         cmap="inferno",
     )  # , norm=colors.LogNorm())
     cs = ax.pcolormesh(
         np.deg2rad(-l_mod),
         np.deg2rad(b),
-        map_val * (1e3 if map_type == "emission" else 1.0),
+        (map_val + disk_val) * (1e3 if map_type == "emission" else 1.0),
         cmap="inferno",
     )  # , norm=colors.LogNorm())
     ax.grid(True)

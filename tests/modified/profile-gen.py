@@ -27,7 +27,7 @@ def profile_gen(unmod: str, mod: str, ionization: str) -> None:
     cutoff = 4.0
     TmedVW = 3.0e5
     sig = 0.3
-    redshift = 0.001
+    redshift = 0.2
 
     radius = np.linspace(9.0, 250, 30)  # kpc
 
