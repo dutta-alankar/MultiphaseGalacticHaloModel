@@ -173,3 +173,5 @@ modified/*.exe
 tests/unmodified/figures/*.png
 tests/modified/figures/*.png
 tests/observables/figures/*.png
+3Phase/figures/*.png
+3Phase/Illustris-TNG50-1/figures/*.png
