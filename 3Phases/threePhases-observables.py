@@ -10,6 +10,7 @@ import sys
 import os
 
 from scipy.optimize import root
+
 sys.path.append("..")
 sys.path.append("../submodules/AstroPlasma")
 sys.path.append("../tests/observables")
@@ -18,7 +19,9 @@ from misc.HaloModel import HaloModel
 from parse_observation import observedColDens
 from misc.constants import mp, mH, kpc, Xp
 
-N_pdf = lambda x, mu, sig: (1.0 / (np.sqrt(2 * np.pi) * sig)) * np.exp(-((x - mu) / (np.sqrt(2) * sig))**2)
+N_pdf = lambda x, mu, sig: (1.0 / (np.sqrt(2 * np.pi) * sig)) * np.exp(
+    -(((x - mu) / (np.sqrt(2) * sig)) ** 2)
+)
 
 mode = "PIE"
 Z0 = 1.0
@@ -34,11 +37,13 @@ redshift = 0.2
 
 M200 = 1e13  # MSun
 halo = HaloModel(M200=M200)
-rCGM = 1.1*halo.r200 * (halo.UNIT_LENGTH / kpc)  # kpc
+rCGM = 1.1 * halo.r200 * (halo.UNIT_LENGTH / kpc)  # kpc
 r200 = halo.r200 * (halo.UNIT_LENGTH / kpc)  # kpc
 PbykB = 1e1
 
-f_Vh, f_Vw, f_Vc, x_h, x_w, x_c, sig_h, sig_w, sig_c, T_u = np.load("./figures/mcmc_opt-parameters.npy")
+f_Vh, f_Vw, f_Vc, x_h, x_w, x_c, sig_h, sig_w, sig_c, T_u = np.load(
+    "./figures/mcmc_opt-parameters.npy"
+)
 
 Temperature = np.logspace(3.8, 6.8, 50)
 x = np.log(Temperature / T_u)
@@ -54,12 +59,15 @@ V_pdf_fv = (
 
 mu = Ionization.interpolate_mu
 
-nH_guess = (PbykB*(6e5/Temperature) /  Temperature) * (Xp(metallicity)*0.61) / (mH/mp) # guess
+nH_guess = (
+    (PbykB * (6e5 / Temperature) / Temperature) * (Xp(metallicity) * 0.61) / (mH / mp)
+)  # guess
 # This is a local quantity
 nH = 10.0 ** np.array(
     [
         root(
-            lambda LognH: PbykB*(6e5/Temperature[i])
+            lambda LognH: PbykB
+            * (6e5 / Temperature[i])
             * Xp(metallicity)
             * mu(
                 10.0**LognH,
@@ -75,12 +83,13 @@ nH = 10.0 ** np.array(
     ]
 )
 
-'''
-# Used during debugging 
+"""
+# Used during debugging
 mu_val = np.array([mu(nH[i], Temperature[i], metallicity, redshift, mode) for i in range(Temperature.shape[0])])
 print(nH*(mH/mp)*Temperature/mu_val)
 print(nH)
-'''
+"""
+
 
 def nIon_global_avg(element):
     nIon = Ionization.interpolate_num_dens
@@ -90,11 +99,7 @@ def nIon_global_avg(element):
             for i, T_val in enumerate(Temperature)
         ]
     )
-    nIon_g_avg = np.trapz(
-        nIon_local
-        * V_pdf_fv,
-        x 
-    )
+    nIon_g_avg = np.trapz(nIon_local * V_pdf_fv, x)
     return nIon_g_avg
 
 
@@ -115,12 +120,13 @@ ni_local = np.array(
 
 
 ne_global_avg = np.trapz(ne_local * V_pdf_fv, x)
-ni_global_avg = np.trapz(ni_local * V_pdf_fv , x)
+ni_global_avg = np.trapz(ni_local * V_pdf_fv, x)
 
-b = np.linspace(9.0, 1.05*r200, 200)  # kpc
+b = np.linspace(9.0, 1.05 * r200, 200)  # kpc
 column_length = 2 * np.sqrt(rCGM**2 - b**2)
 
 os.makedirs("./figures/observations/", exist_ok=True)
+
 
 def IonColumn(element, ylim=None, fignum=None, color=None):
     if fignum is None:
@@ -129,10 +135,12 @@ def IonColumn(element, ylim=None, fignum=None, color=None):
         plt.figure(num=fignum, figsize=(13, 10))
     if color == None:
         color = "tab:blue"
-        
+
     observation = observedColDens()
 
-    NIon = np.nan_to_num(nIon_global_avg( "".join(element.split()) ) * column_length * kpc)  # cm^-2
+    NIon = np.nan_to_num(
+        nIon_global_avg("".join(element.split())) * column_length * kpc
+    )  # cm^-2
     plt.plot(
         b / r200,
         NIon,
@@ -199,10 +207,13 @@ def IonColumn(element, ylim=None, fignum=None, color=None):
     # leg.set_title("Column density predicted by three phase model",prop={'size':20})
     if fignum == None:
         plt.legend(loc="upper right", ncol=1, fancybox=True, fontsize=25)
-        plt.savefig("./figures/observations/N_%s-3p.png" % ("".join(element.split()),), transparent=False)
+        plt.savefig(
+            "./figures/observations/N_%s-3p.png" % ("".join(element.split()),),
+            transparent=False,
+        )
         # plt.show()
         plt.close()
-    
+
 
 # --------------------- DM and EM ------------------
 DM = ne_global_avg * column_length * 1e3  # cm^-3 pc

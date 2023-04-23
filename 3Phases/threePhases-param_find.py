@@ -17,27 +17,29 @@ from scipy.optimize import minimize
 from multiprocessing import Pool
 
 
-def threePhases(params: Union[list, np.ndarray], logTemperature: Union[list, np.ndarray]) -> np.ndarray:
+def threePhases(
+    params: Union[list, np.ndarray], logTemperature: Union[list, np.ndarray]
+) -> np.ndarray:
     N_pdf = lambda x, mu, sig: (1.0 / (np.sqrt(2 * np.pi) * sig)) * np.exp(
         -(x - mu) * (x - mu) / (2.0 * sig * sig)
     )
-    
-    T_u = 10.0 ** params[0]  
+
+    T_u = 10.0 ** params[0]
     T_h = T_u
     T_w = 10.0 ** params[1]
     T_c = 10.0 ** params[2]
-    
-    f_Vh = params[3]  
-    f_Vw = params[4]  
+
+    f_Vh = params[3]
+    f_Vw = params[4]
     f_Vc = 1 - (f_Vh + f_Vw)
 
-    sig_h = params[5]  
-    sig_w = params[6]  
-    sig_c = params[7]  
-    
+    sig_h = params[5]
+    sig_w = params[6]
+    sig_c = params[7]
+
     # mid-way between isochoric=1 and isobaric=0;
     # consistent prescription (beta is for across phases and del is within a phase)
-    x = np.log(10.0**np.array(logTemperature) / T_u)
+    x = np.log(10.0 ** np.array(logTemperature) / T_u)
     T_h = T_u
     T_w = 10.0 ** params[1]
     T_c = 10.0 ** params[2]
@@ -67,11 +69,13 @@ def log_likelihood(
 
 
 def log_prior(params, additional_data):
-    lnnormal = lambda x, mu, sig: - (np.log(np.sqrt(2 * np.pi) * sig) + ((x - mu)  / (np.sqrt(2) * sig))**2)
+    lnnormal = lambda x, mu, sig: -(
+        np.log(np.sqrt(2 * np.pi) * sig) + ((x - mu) / (np.sqrt(2) * sig)) ** 2
+    )
 
-    x_h = additional_data['Th_expect']  # in log10
-    x_w = additional_data['Tw_expect']  # in log10
-    x_c = additional_data['Tc_expect']  # in log10
+    x_h = additional_data["Th_expect"]  # in log10
+    x_w = additional_data["Tw_expect"]  # in log10
+    x_c = additional_data["Tc_expect"]  # in log10
 
     lp = np.sum(
         lnnormal(params[0], x_h, 0.2)
@@ -79,21 +83,21 @@ def log_prior(params, additional_data):
         + lnnormal(params[2], x_c, 0.007)
         + lnnormal(params[7], 0.3, 0.01)
     )
-    
+
     # Constrains not needed are commented out because they maybe useful for other set of parameters
-    
-    # T_u = 10.**params[0] 
+
+    # T_u = 10.**params[0]
     # T_h = T_u
-    # T_w = 10.**params[1] 
-    # T_c = 10.**params[2] 
-    
-    f_Vh = params[3]  
-    f_Vw = params[4]  
+    # T_w = 10.**params[1]
+    # T_c = 10.**params[2]
+
+    f_Vh = params[3]
+    f_Vw = params[4]
     # f_Vc = 1 - (f_Vh+f_Vw)
 
-    sig_h = params[5]  
-    sig_w = params[6]  
-    sig_c = params[7]  
+    sig_h = params[5]
+    sig_w = params[6]
+    sig_c = params[7]
 
     condition = 0.90 < f_Vh < 0.98
     condition = condition and (0.01 < f_Vw < (1.0 - f_Vh))
@@ -156,11 +160,11 @@ if __name__ == "__main__":
     T_h = T_u
     T_w = 4.92
     T_c = 4.101
-    
+
     additional_data = {
-        "Th_expect" : T_h,
-        "Tw_expect" : T_w,
-        "Tc_expect" : T_c,
+        "Th_expect": T_h,
+        "Tw_expect": T_w,
+        "Tc_expect": T_c,
     }
     random_factor = 1.0e-3
 
@@ -209,7 +213,7 @@ if __name__ == "__main__":
 
     pos = params + random_factor * params * np.random.randn(nwalkers, ndim)
     steps = 100000
-    
+
     if multitask:
         sampler = None
         with Pool() as pool:
@@ -222,9 +226,11 @@ if __name__ == "__main__":
             )
             sampler.run_mcmc(pos, steps, progress=True)
 
-    
     sampler = emcee.EnsembleSampler(
-        nwalkers, ndim, log_probability, args=(Temperature_data, V_pdf_data, additional_data)
+        nwalkers,
+        ndim,
+        log_probability,
+        args=(Temperature_data, V_pdf_data, additional_data),
     )
     sampler.run_mcmc(pos, steps, progress=True)
 
