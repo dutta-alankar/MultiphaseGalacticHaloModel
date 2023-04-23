@@ -8,7 +8,8 @@ Created on Fri Mar 25 20:15:04 2023
 import matplotlib.pyplot as plt
 import numpy as np
 
-data = np.load("randomSight_e.8_i.6.npz")
+element = "MgII"
+data = np.load(f"./figures/randomSight_e.{element}.npz")
 
 impact = data["impact"]
 col_dens = data["col_dens"]
@@ -23,4 +24,5 @@ for i in range(impact.shape[0]):
     plt.xlabel("b/r200")
     plt.ylabel(r"Column Density [$cm^{-2}$]")
 plt.grid()
-plt.show()
+plt.savefig(f"./figures/randomSight_e.{element}.png")
+# plt.show()

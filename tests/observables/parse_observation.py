@@ -6,13 +6,21 @@ Created on Thu Apr 13 12:12:15 2023
 """
 import numpy as np
 from typing import Optional
+import os
+
+_galaxyDataFile = os.path.join(
+    os.path.abspath(os.path.dirname(__file__)), "apjs456058t3_mrt.txt"
+)
+_galaxySizeFile = os.path.join(
+    os.path.abspath(os.path.dirname(__file__)), "VirialRad.txt"
+)
 
 
 class observedColDens:
     def __init__(
         self: "observedColDens",
-        galaxyDataFile: str = "apjs456058t3_mrt.txt",
-        galaxySizeFile: str = "VirialRad.txt",
+        galaxyDataFile: str = _galaxyDataFile,
+        galaxySizeFile: str = _galaxySizeFile,
     ) -> None:
         self.galaxyDataFile = galaxyDataFile
         self.galaxySizeFile = galaxySizeFile

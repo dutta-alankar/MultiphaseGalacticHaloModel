@@ -11,40 +11,36 @@ import emcee
 import corner
 import time
 import os
+import pickle
 from typing import Union
 from scipy.optimize import minimize
 from multiprocessing import Pool
 
 
-def threePhases(params: Union[list, np.ndarray], logTemperature: float) -> np.ndarray:
+def threePhases(params: Union[list, np.ndarray], logTemperature: Union[list, np.ndarray]) -> np.ndarray:
     N_pdf = lambda x, mu, sig: (1.0 / (np.sqrt(2 * np.pi) * sig)) * np.exp(
         -(x - mu) * (x - mu) / (2.0 * sig * sig)
     )
-
-    f_Vh = params[3]  # 0.967
-    f_Vw = params[4]  # 0.031
+    
+    T_u = 10.0 ** params[0]  
+    T_h = T_u
+    T_w = 10.0 ** params[1]
+    T_c = 10.0 ** params[2]
+    
+    f_Vh = params[3]  
+    f_Vw = params[4]  
     f_Vc = 1 - (f_Vh + f_Vw)
 
-    # print('params: ', f_Vh, f_Vw, f_Vc)
-
-    T_u = 10.0 ** params[0]  # 10.**6.4
-
-    sig_h = params[5]  # 0.52
-    sig_w = params[6]  # 1.4
-    sig_c = params[7]  # 0.4
-
-    T_h = T_u
-    T_w = 10.0 ** params[1]  # 10**5.5
-    T_c = 10.0 ** params[2]  # 1.4e4
-
-    # sig_c = 0.3
-
+    sig_h = params[5]  
+    sig_w = params[6]  
+    sig_c = params[7]  
+    
     # mid-way between isochoric=1 and isobaric=0;
     # consistent prescription (beta is for across phases and del is within a phase)
-    x = np.log(10.0**logTemperature / T_u)
+    x = np.log(10.0**np.array(logTemperature) / T_u)
     T_h = T_u
-    T_w = 10.0 ** params[1]  # 10**5.5
-    T_c = 10.0 ** params[2]  # 1.4e4
+    T_w = 10.0 ** params[1]
+    T_c = 10.0 ** params[2]
 
     x_h = np.log(T_h / T_u)
     x_w = np.log(T_w / T_u)
@@ -70,15 +66,12 @@ def log_likelihood(
     return lsq
 
 
-def log_prior(params):
-    lnnormal = lambda x, mu, sig: -np.log(np.sqrt(2 * np.pi) * sig) - (x - mu) * (
-        x - mu
-    ) / (2.0 * sig * sig)
+def log_prior(params, additional_data):
+    lnnormal = lambda x, mu, sig: - (np.log(np.sqrt(2 * np.pi) * sig) + ((x - mu)  / (np.sqrt(2) * sig))**2)
 
-    global Th_expect, Tw_expect, Tc_expect
-    x_h = Th_expect  # in log10
-    x_w = Tw_expect  # in log10
-    x_c = Tc_expect  # in log10
+    x_h = additional_data['Th_expect']  # in log10
+    x_w = additional_data['Tw_expect']  # in log10
+    x_c = additional_data['Tc_expect']  # in log10
 
     lp = np.sum(
         lnnormal(params[0], x_h, 0.2)
@@ -86,20 +79,21 @@ def log_prior(params):
         + lnnormal(params[2], x_c, 0.007)
         + lnnormal(params[7], 0.3, 0.01)
     )
-
-    f_Vh = params[3]  # 0.967
-    f_Vw = params[4]  # 0.031
+    
+    # Constrains not needed are commented out because they maybe useful for other set of parameters
+    
+    # T_u = 10.**params[0] 
+    # T_h = T_u
+    # T_w = 10.**params[1] 
+    # T_c = 10.**params[2] 
+    
+    f_Vh = params[3]  
+    f_Vw = params[4]  
     # f_Vc = 1 - (f_Vh+f_Vw)
 
-    # T_u = 10.**params[0] # 10.**6.4
-
-    sig_h = params[5]  # 0.52
-    sig_w = params[6]  # 1.4
-    sig_c = params[7]  # 0.4
-
-    # T_h = T_u
-    # T_w = 10.**params[1] # 10**5.5
-    # T_c = 10.**params[2] # 1.4e4
+    sig_h = params[5]  
+    sig_w = params[6]  
+    sig_c = params[7]  
 
     condition = 0.90 < f_Vh < 0.98
     condition = condition and (0.01 < f_Vw < (1.0 - f_Vh))
@@ -116,8 +110,8 @@ def log_prior(params):
         return -np.inf
 
 
-def log_probability(params, x_data, y_data):
-    lp = log_prior(params)
+def log_probability(params, x_data, y_data, additional_data):
+    lp = log_prior(params, additional_data)
     ll = log_likelihood(params, x_data, y_data)
     if not (np.isfinite(lp)) or np.sum(np.isnan(ll)) > 0:
         return -np.inf
@@ -162,11 +156,12 @@ if __name__ == "__main__":
     T_h = T_u
     T_w = 4.92
     T_c = 4.101
-
-    Th_expect = T_h
-    Tw_expect = T_w
-    Tc_expect = T_c
-
+    
+    additional_data = {
+        "Th_expect" : T_h,
+        "Tw_expect" : T_w,
+        "Tc_expect" : T_c,
+    }
     random_factor = 1.0e-3
 
     params = np.array([T_h, T_w, T_c, f_Vh, f_Vw, sig_h, sig_w, sig_c])
@@ -213,7 +208,8 @@ if __name__ == "__main__":
     ndim = params.shape[0]
 
     pos = params + random_factor * params * np.random.randn(nwalkers, ndim)
-
+    steps = 100000
+    
     if multitask:
         sampler = None
         with Pool() as pool:
@@ -222,13 +218,13 @@ if __name__ == "__main__":
                 ndim,
                 log_probability,
                 pool=pool,
-                args=(Temperature_data, V_pdf_data),
+                args=(Temperature_data, V_pdf_data, additional_data),
             )
-            sampler.run_mcmc(pos, 1000000, progress=True)
+            sampler.run_mcmc(pos, steps, progress=True)
 
-    steps = 100000
+    
     sampler = emcee.EnsembleSampler(
-        nwalkers, ndim, log_probability, args=(Temperature_data, V_pdf_data)
+        nwalkers, ndim, log_probability, args=(Temperature_data, V_pdf_data, additional_data)
     )
     sampler.run_mcmc(pos, steps, progress=True)
 
@@ -257,22 +253,29 @@ if __name__ == "__main__":
     # plt.show()
 
     tau = sampler.get_autocorr_time()
-    print(tau)
+    # print(tau)
 
     flat_samples = sampler.get_chain(
         discard=int(5 * np.ceil(np.max(tau))),
         thin=int(np.ceil(np.max(tau) / 2)),
         flat=True,
     )
-    np.save("./figures/corner_data.npy", flat_samples)
+    with open("./figures/corner_data.pickle", "wb") as f:
+        data = {
+            "flat_samples": flat_samples,
+            "initial_guess": params,
+        }
+        # print(list(data.keys()))
+        pickle.dump(data, f)
+
     fig = corner.corner(
         flat_samples,
         labels=labels,
         quantiles=[0.16, 0.5, 0.84],
         show_titles=True,
-        title_kwargs={"fontsize": 12},
-        label_kwargs={"fontsize": 12},
-        truths=params,  # params,
+        title_kwargs={"fontsize": 16},
+        label_kwargs={"fontsize": 16},
+        truths=params,
         title_fmt=".3f",
     )
     plt.tight_layout()

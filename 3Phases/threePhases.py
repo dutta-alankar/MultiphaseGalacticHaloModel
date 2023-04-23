@@ -27,24 +27,6 @@ metallicity = (
 
 T = np.logspace(3.0, 8.0, 1000)
 
-# params = np.load('./figures/params_sol.npy')
-
-# f_Vh = params[3]
-# f_Vw = params[4]
-# f_Vc = 1 - (f_Vh+f_Vw)
-
-# sig_u = 0.7
-# T_u = 10.**params[0]
-# T_h = T_u
-# T_w = 10**params[1]
-# T_c = 10.**params[2]
-
-# T_u_M = T_u*np.exp(-sig_u**2/2)
-
-# sig_h = params[5]
-# sig_w = params[6]
-# sig_c = params[7]
-
 f_Vh = 0.938
 f_Vw = 0.060
 f_Vc = 1 - (f_Vh + f_Vw)
@@ -54,20 +36,12 @@ T_u = 10.0**5.754
 T_u_M = T_u * np.exp(-(sig_u**2) / 2)
 
 T_h = T_u  # 10.**5.8
-T_w = 10**5.269
+T_w = 10**5.270
 T_c = 10.0**4.102
 
 sig_h = 0.495
-sig_w = 1.054
+sig_w = 1.050
 sig_c = 0.300
-
-# T_h = 10**6.4
-# T_w = 10**5.2
-# T_c = 1.5e4
-
-# sig_h = 0.9
-# sig_w = 1.4
-# sig_c = 0.3
 
 # mid-way between isochoric=1 and isobaric=0;
 # consistent prescription (beta is for across phases and del is within a phase)
@@ -82,11 +56,9 @@ V_pdf = (
     + f_Vc * N_pdf(x, x_c, sig_c)
 )
 np.save(
-    "parameters.npy",
+    "./figures/mcmc_opt-parameters.npy",
     np.array([f_Vh, f_Vw, f_Vc, x_h, x_w, x_c, sig_h, sig_w, sig_c, T_u]),
 )
-# print('V_pdf norm', np.trapz(V_pdf/T, T))
-
 
 del_h = 1.1
 del_w = 1e-4
@@ -118,10 +90,10 @@ f_Mh = f_Vh * (T_h_M / T_u_M) ** (beta_h - 1)
 f_Mw = f_Vw * (T_w_M / T_u_M) ** (beta_w - 1)
 f_Mc = f_Vc * (T_c_M / T_u_M) ** (beta_c - 1)
 
-Den = f_Mh + f_Mw + f_Mc
-f_Mh = f_Mh / Den
-f_Mw = f_Mw / Den
-f_Mc = f_Mc / Den
+rho = f_Mh + f_Mw + f_Mc
+f_Mh = f_Mh / rho
+f_Mw = f_Mw / rho
+f_Mc = f_Mc / rho
 
 # print("volume fractions, hot, warm, cold:", f_Vh, f_Vw, f_Vc)
 # print("mass fractions, hot, warm, cold:", f_Mh, f_Mw, f_Mc)
@@ -180,10 +152,10 @@ L_pdf_m /= np.trapz(L_pdf_m, x)
 f_Lh = np.trapz(hot_lum, x)
 f_Lw = np.trapz(warm_lum, x)
 f_Lc = np.trapz(cold_lum, x)
-Den = f_Lh + f_Lw + f_Lc
-f_Lh = f_Lh / Den
-f_Lw = f_Lw / Den
-f_Lc = f_Lc / Den
+rho = f_Lh + f_Lw + f_Lc
+f_Lh = f_Lh / rho
+f_Lw = f_Lw / rho
+f_Lc = f_Lc / rho
 
 os.system("mkdir -p ./figures")
 np.save("./figures/3PhasePdf.npy", np.vstack((np.log10(T), V_pdf, M_pdf_m, L_pdf_m)).T)
