@@ -27,7 +27,7 @@ class Measure(maps.MapInit, ABC):
     def __init__(self, redisProf: modified_field):
         super().__init__(redisProf)
         self.redisProf = redisProf
-        self.genProf = False
+        self._already_profile_generated = False
         self.observable: Optional[Union[float, int, np.ndarray]] = None
 
     def _generate_measurable(
@@ -40,7 +40,7 @@ class Measure(maps.MapInit, ABC):
             return Ionization.interpolate_num_dens(*tup)
 
         # redistributed profile is generated for only a limited number of points and used for interpolation
-        if not (self.genProf):
+        if not (self._already_profile_generated):
             rend = (
                 1.01
                 * self.redisProf.unmodified.rCGM
@@ -59,7 +59,7 @@ class Measure(maps.MapInit, ABC):
                 prs_warm,
                 Tcut,
             ) = self.redisProf.ProfileGen(radius_)
-            self.genProf = True
+            self._already_profile_generated = True
             print("Complete!", flush=True)
 
         mu = Ionization.interpolate_mu
@@ -106,51 +106,54 @@ class Measure(maps.MapInit, ABC):
             xh: np.ndarray,
             gvwT: np.ndarray,
             xw: np.ndarray,
-            part_type: str,
+            part_types: list[str],
         ) -> float:
-            tup = (
-                *zip(
-                    nHhot,
-                    Temp,
-                    metallicity(r_val) * np.ones(Temp.shape[0]),
-                    redshift * np.ones(Temp.shape[0]),
-                    [
-                        mode,
-                    ]
-                    * Temp.shape[0],
-                    [
-                        part_type,
-                    ]
-                    * Temp.shape[0],
-                ),
-            )
+            quanHot = np.zeros((len(part_types), Temp.shape[0]))
+            quanWarm = np.zeros_like(quanHot)
+            for indx, part_type in enumerate(part_types):
+                tup = (
+                    *zip(
+                        nHhot,
+                        Temp,
+                        metallicity(r_val) * np.ones(Temp.shape[0]),
+                        redshift * np.ones(Temp.shape[0]),
+                        [
+                            mode,
+                        ]
+                        * Temp.shape[0],
+                        [
+                            part_type,
+                        ]
+                        * Temp.shape[0],
+                    ),
+                )
 
-            quanHot = np.array((*map(num_dens, tup),)).reshape(Temp.shape)
+                quanHot[indx, :] = np.array((*map(num_dens, tup),)).reshape(Temp.shape)
 
-            tup = (
-                *zip(
-                    nHwarm,
-                    Temp,
-                    metallicity(r_val) * np.ones(Temp.shape[0]),
-                    redshift * np.ones(Temp.shape[0]),
-                    [
-                        mode,
-                    ]
-                    * Temp.shape[0],
-                    [
-                        part_type,
-                    ]
-                    * Temp.shape[0],
-                ),
-            )
+                tup = (
+                    *zip(
+                        nHwarm,
+                        Temp,
+                        metallicity(r_val) * np.ones(Temp.shape[0]),
+                        redshift * np.ones(Temp.shape[0]),
+                        [
+                            mode,
+                        ]
+                        * Temp.shape[0],
+                        [
+                            part_type,
+                        ]
+                        * Temp.shape[0],
+                    ),
+                )
 
-            quanWarm = np.array((*map(num_dens, tup),)).reshape(Temp.shape)
+                quanWarm[indx, :] = np.array((*map(num_dens, tup),)).reshape(Temp.shape)
 
             hotInt = (1 - fvw(r_val)) * np.trapz(
-                quanHot * gvhT, xh
+                np.product(quanHot, axis=0) * gvhT, xh
             )  # global density sensitive, extra filling factor for global
 
-            warmInt = fvw(r_val) * np.trapz(quanWarm * gvwT, xw)
+            warmInt = fvw(r_val) * np.trapz(np.product(quanWarm, axis=0) * gvwT, xw)
 
             return hotInt + warmInt
 
@@ -213,15 +216,26 @@ class Measure(maps.MapInit, ABC):
             )
 
             ne = _weighted_avg_quantity(
-                r_val, nHhot, nHwarm, gvhT, xh, gvwT, xw, "electron"
+                r_val,
+                nHhot,
+                nHwarm,
+                gvhT,
+                xh,
+                gvwT,
+                xw,
+                [
+                    "electron",
+                ],
             )
-            ni = _weighted_avg_quantity(r_val, nHhot, nHwarm, gvhT, xh, gvwT, xw, "ion")
+            neni = _weighted_avg_quantity(
+                r_val, nHhot, nHwarm, gvhT, xh, gvwT, xw, ["electron", "ion"]
+            )
 
-            return np.array([ne, ni])
+            return np.array([ne, neni])
 
         _quan = np.array([*map(_calc, np.array(distance))])
-        ne, ni = _quan[:, 0], _quan[:, 1]
-        return (ne, ni)
+        ne, neni = _quan[:, 0], _quan[:, 1]
+        return (ne, neni)
 
     @abstractmethod
     def observable_quantity(
@@ -253,14 +267,14 @@ class Measure(maps.MapInit, ABC):
 
         distance = np.logspace(np.log10(5.0), 1.01 * np.log10(rend), 20)  # kpc
         print("Generating profiles ...")
-        ne_val, ni_val = self._generate_measurable(distance)
+        ne_val, neni_val = self._generate_measurable(distance)
         print("Complete!")
 
         ne_prof = interp1d(
             np.log10(distance), np.log10(ne_val), fill_value="extrapolate"
         )
-        ni_prof = interp1d(
-            np.log10(distance), np.log10(ni_val), fill_value="extrapolate"
+        neni_prof = interp1d(
+            np.log10(distance), np.log10(neni_val), fill_value="extrapolate"
         )
 
         if isinstance(l, np.ndarray):
@@ -281,7 +295,7 @@ class Measure(maps.MapInit, ABC):
                         radius = np.abs(radius * np.sin(np.deg2rad(theta)))
                         distance = np.sqrt(radius**2 + height**2)
                         observable = self.observable_quantity(
-                            [ne_prof, ni_prof], distance, LOSsample
+                            [ne_prof, neni_prof], distance, LOSsample
                         )
                         # np.trapz( np.nan_to_num(10.**ne_prof(np.log10(distance))) , LOSsample)
                         self.observable[i, j] = observable  # cm^-3 kpc
@@ -304,7 +318,7 @@ class Measure(maps.MapInit, ABC):
                     radius = np.abs(radius * np.sin(np.deg2rad(theta)))  # along disk
                     distance = np.sqrt(radius**2 + height**2)
                     observable = self.observable_quantity(
-                        [ne_prof, ni_prof], distance, LOSsample
+                        [ne_prof, neni_prof], distance, LOSsample
                     )
                     return observable  # cm^-3 kpc
 
@@ -327,7 +341,7 @@ class Measure(maps.MapInit, ABC):
             radius = np.abs(radius * np.sin(np.deg2rad(theta)))  # along disk
             distance = np.sqrt(radius**2 + height**2)
             self.observable = self.observable_quantity(
-                [ne_prof, ni_prof], distance, LOSsample
+                [ne_prof, neni_prof], distance, LOSsample
             )
 
         self.observable = self.post_process_observable(self.observable)

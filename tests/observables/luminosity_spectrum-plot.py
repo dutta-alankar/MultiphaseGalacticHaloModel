@@ -112,6 +112,8 @@ if __name__ == "__main__":
     plt.legend(
         loc="lower left", prop={"size": 20}, framealpha=0.3, shadow=False, fancybox=True
     )
+    plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
+    plt.tick_params(axis="both", which="minor", length=6, width=1, labelsize=22)
     plt.savefig(
         f"figures/spectrum_{unmod[0]+unmod[1]}_{mod[0]}_{ionization[0]}.png",
         transparent=False,

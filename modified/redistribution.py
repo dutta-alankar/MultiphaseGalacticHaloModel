@@ -294,7 +294,7 @@ class Redistribution(ABC):
     ) -> None:  # Takes in radius in kpc (one value at any call)
         _call_profile = True  # Check if ProfileGen needs to be called
         _save = True
-        if hasattr(self, "radius") and hasattr(self, "_plot_xval"):
+        if self.radius is not None and self._plot_xval is not None:
             if radius in self.radius:
                 _call_profile = False
         if _call_profile:

@@ -20,13 +20,11 @@ class EmissionMeasure(Measure):
         distance: Union[float, list, np.ndarray],
         LOS_sample: Union[list, np.ndarray],
     ) -> float:
-        ne_prof = funcs[0]
-        ni_prof = funcs[1]
-        ne = np.nan_to_num(10.0 ** ne_prof(np.log10(distance)))
-        ni = np.nan_to_num(10.0 ** ni_prof(np.log10(distance)))
-        return np.trapz(ne * ni, LOS_sample)  # cm^-6 kpc
+        neni_prof = funcs[1]
+        neni = np.nan_to_num(10.0 ** neni_prof(np.log10(distance)))
+        return np.trapz(neni, LOS_sample)  # cm^-6 kpc
 
     def post_process_observable(
         self: "EmissionMeasure", quantity: Union[float, np.ndarray]
     ) -> Union[float, np.ndarray]:
-        return quantity * 1e3  # convert to cm^-3 pc
+        return quantity * 1e3  # convert to cm^-6 pc

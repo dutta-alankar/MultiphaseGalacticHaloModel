@@ -58,7 +58,6 @@ def plot_column_density(unmod, mod, ion):
             impact = data["impact"]
             column_density = data[f"N_{ion}"]
             rCGM = data["rCGM"]
-
             extra_label = ("Isothermal" if unmod == "isoth" else "Isentropic") + (
                 " (IC)" if mod == "isochor" else "(IB)"
             )
@@ -66,7 +65,7 @@ def plot_column_density(unmod, mod, ion):
                 pl1 = plt.loglog(
                     np.array(impact) / rCGM,
                     column_density,
-                    label=r"$N_{%s}$ " % (ion,) + extra_label,
+                    label=extra_label,
                     linestyle="-",
                 )
             else:
@@ -79,18 +78,21 @@ def plot_column_density(unmod, mod, ion):
 
 
 if __name__ == "__main__":
-    unmod = ["isoth", "isent"]
-    mod = ["isochor", "isobar"]
-    ion = "NV"  # "OVI"
+    unmod = [
+        "isoth",
+    ]  # "isent"]
+    mod = [
+        "isochor",
+    ]  # "isobar"]
+    element = "O VI"  # "OVI"
 
     plt.figure(figsize=(13, 10))
 
     for condition in product(unmod, mod):
-        plot_column_density(*condition, ion)
+        plot_column_density(*condition, "".join(element.split()))
 
     observation = observedColDens()
 
-    element = "N V" if ion == "NV" else "O VI"
     (
         gal_id_min,
         gal_id_max,
@@ -106,7 +108,6 @@ if __name__ == "__main__":
         coldens_detect,
         e_coldens_detect,
     ) = observation.col_density_gen(element=element)
-
     yerr = np.log(10) * e_coldens_detect * 10.0**coldens_detect
     plt.errorbar(
         impact_select_detect / rvir_select_detect,
@@ -114,7 +115,7 @@ if __name__ == "__main__":
         yerr=yerr,
         fmt="o",
         color="black",
-        label=r"$\rm N_{%s, obs}$" % element,
+        label=r"Observations",
         markersize=10,
     )
     plt.plot(
@@ -132,9 +133,37 @@ if __name__ == "__main__":
         markersize=10,
     )
 
+    if element == "O VII":
+        # obs
+        NOVII_obs = 15.68
+        NOVII_err = 0.27
+        yerr = np.log(10) * NOVII_err * 10.0**NOVII_obs
+        plt.axhspan(
+            2 * 10.0**NOVII_obs,
+            2 * (10.0**NOVII_obs - yerr),
+            color="gray",
+            alpha=0.2,
+            zorder=0,
+        )
+
+    if element == "O VIII":
+        # obs
+        NOVIII_obs = NOVII_obs - np.log10(4)
+        NOVIII_err = NOVII_err - np.log10(4)
+        yerr = np.log(10) * NOVIII_err * 10.0**NOVIII_obs
+        plt.axhspan(
+            2 * 10.0**NOVIII_obs,
+            2 * (10.0**NOVIII_obs - yerr),
+            color="gray",
+            alpha=0.2,
+            zorder=0,
+        )
+
     plt.legend()
-    plt.xlabel(r"Impact parameter [$r_{vir}$]")
-    plt.ylabel(r"Column density ($cm^{-2}$)")
+    plt.xlabel(r"Impact parameter [$r_{vir}$]", size=28)
+    plt.ylabel(r"Column density of %s ($cm^{-2}$)" % element, size=28)
+    plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
+    plt.tick_params(axis="both", which="minor", length=6, width=1, labelsize=22)
     plt.xlim(xmin=0.05, xmax=1.1)
-    plt.ylim(ymin=10**11.7, ymax=10.0**15.3)
-    plt.savefig(f"figures/column_density_{ion}.png", transparent=False)
+    # plt.ylim(ymin=10**11.7, ymax=10.0**15.3)
+    plt.savefig(f"figures/column_density_{element}.png", transparent=False)

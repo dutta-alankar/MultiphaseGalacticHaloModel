@@ -13,10 +13,12 @@ import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 from itertools import product
+from typing import Optional
 from unmodified.isoth import IsothermalUnmodified
 from unmodified.isent import IsentropicUnmodified
 from modified.isobarcool import IsobarCoolRedistribution
 from modified.isochorcool import IsochorCoolRedistribution
+from misc.template import unmodified_field
 
 ## Plot Styling
 matplotlib.rcParams["xtick.direction"] = "in"
@@ -51,11 +53,12 @@ cutoff = 4.0
 redshift = 0.2
 
 
-def gen_PDF(unmod, ionization):
+def gen_PDF(unmod: str, ionization: str) -> None:
     print(unmod, ionization)
     fig = plt.figure(figsize=(13, 10))
 
     # ------ Unmodified -------
+    unmodified: Optional[unmodified_field] = None
     if unmod == "isoth":
         TmedVH = 1.5e6
         THotM = TmedVH * np.exp(-(sig**2) / 2)

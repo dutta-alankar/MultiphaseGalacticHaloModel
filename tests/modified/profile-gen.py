@@ -14,6 +14,7 @@ import numpy as np
 import pickle
 from itertools import product
 from typing import Optional
+from misc.constants import kpc
 from unmodified.isoth import IsothermalUnmodified
 from unmodified.isent import IsentropicUnmodified
 from modified.isobarcool import IsobarCoolRedistribution
@@ -82,8 +83,10 @@ def profile_gen(unmod: str, mod: str, ionization: str) -> None:
         _,
     ) = modified.ProfileGen(radius)
     with open(f"figures/mod_prof_{unmod}_{mod}_{ionization}.pickle", "wb") as f:
+        # print(unmodified.Halo.r200 * unmodified.Halo.UNIT_LENGTH / kpc)
         data = {
             "radius": radius,
+            "rvir": unmodified.Halo.r200 * unmodified.Halo.UNIT_LENGTH / kpc,
             "nhot_local": nhot_local,
             "nwarm_local": nwarm_local,
             "nhot_global": nhot_global,

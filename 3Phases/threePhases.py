@@ -60,9 +60,9 @@ np.save(
     np.array([f_Vh, f_Vw, f_Vc, x_h, x_w, x_c, sig_h, sig_w, sig_c, T_u]),
 )
 
-del_h = 1.1
-del_w = 1e-4
-del_c = 2e-3
+del_h = 0.3
+del_w = 0.3
+del_c = 0.3
 
 beta_h = (
     del_h
@@ -158,4 +158,4 @@ f_Lw = f_Lw / rho
 f_Lc = f_Lc / rho
 
 os.system("mkdir -p ./figures")
-np.save("./figures/3PhasePdf.npy", np.vstack((np.log10(T), V_pdf, M_pdf_m, L_pdf_m)).T)
+np.save("./figures/3PhasesPdf.npy", np.vstack((np.log10(T), V_pdf, M_pdf_m, L_pdf_m)).T)

@@ -9,7 +9,7 @@ import sys
 import numpy as np
 import os
 from scipy.interpolate import interp1d
-from typing import Union, Optional, Any
+from typing import Union, Callable, Optional, Any
 
 sys.path.append("..")
 sys.path.append("../submodules/AstroPlasma")
@@ -28,6 +28,15 @@ class ion_column(ColumnDensity):
         self.element: Optional[int] = None
         self.ion: Optional[int] = None
         self.field: str = "nIon"
+        self.nIon: Optional[Union[np.ndarray, Callable]] = None
+
+    def _reset(self: "ion_column") -> None:
+        super()._reset()
+        self.file_path = None
+        self.element = None
+        self.ion = None
+        self.field = "nIon"
+        self.nIon = None
 
     def _additional_fields(self: "ion_column", indx: int, r_val: float) -> None:
         mode = self.redisProf.ionization
@@ -35,6 +44,10 @@ class ion_column(ColumnDensity):
         fIon = Ionization.interpolate_ion_frac
         mu = Ionization.interpolate_mu
 
+        if self.element is None:
+            raise ValueError("Error: element not set!")
+
+        # TODO: Replace these with core AstroPlasma functions!
         if self.file_path is None:
             self.file_path = os.path.realpath(__file__)
             dir_loc = os.path.split(self.file_path)[:-1]
@@ -56,15 +69,7 @@ class ion_column(ColumnDensity):
 
         a0 = self.abn[self.element - 1]
 
-        if not (hasattr(self, "fIonHot")):
-            self.fIonHot = np.zeros_like(self.nHhot)
-        if not (hasattr(self, "mu_hot")):
-            self.mu_hot = np.zeros_like(self.nHhot)
-        if not (hasattr(self, "fIonWarm")):
-            self.fIonWarm = np.zeros_like(self.nHwarm)
-        if not (hasattr(self, "mu_warm")):
-            self.mu_warm = np.zeros_like(self.nHwarm)
-        if not (hasattr(self, "nIon")):
+        if not (isinstance(self.nIon, np.ndarray)):
             self.nIon = np.zeros_like(self.radius)
 
         xh = np.log(
@@ -87,7 +92,7 @@ class ion_column(ColumnDensity):
             [lambda xp: xp, lambda xp: 0.0],
         )
 
-        self.fIonHot[indx, :] = 10.0 ** np.array(
+        self.fIonHot = 10.0 ** np.array(
             [
                 fIon(
                     self.nHhot[indx, i],
@@ -102,7 +107,7 @@ class ion_column(ColumnDensity):
             ]
         )
 
-        self.mu_hot[indx, :] = np.array(
+        self.mu_hot = np.array(
             [
                 mu(
                     self.nHhot[indx, i],
@@ -115,7 +120,7 @@ class ion_column(ColumnDensity):
             ]
         )
 
-        self.fIonWarm[indx, :] = 10.0 ** np.array(
+        self.fIonWarm = 10.0 ** np.array(
             [
                 fIon(
                     self.nHwarm[indx, i],
@@ -130,7 +135,7 @@ class ion_column(ColumnDensity):
             ]
         )
 
-        self.mu_warm[indx, :] = np.array(
+        self.mu_warm = np.array(
             [
                 mu(
                     self.nHwarm[indx, i],
@@ -144,14 +149,14 @@ class ion_column(ColumnDensity):
         )
 
         hotInt = (1 - self.fvw(r_val)) * np.trapz(
-            (self.mu_hot[indx, :] * self.prs_hot(r_val) / (kB * self.Temp))
-            * self.fIonHot[indx, :]
+            (self.mu_hot * self.prs_hot(r_val) / (kB * self.Temp))
+            * self.fIonHot
             * gvhT,
             xh,
         )  # Global density sensitive The extra volume fraction factor is due to that
         warmInt = self.fvw(r_val) * np.trapz(
-            (self.mu_warm[indx, :] * self.prs_warm(r_val) / (kB * self.Temp))
-            * self.fIonWarm[indx, :]
+            (self.mu_warm * self.prs_warm(r_val) / (kB * self.Temp))
+            * self.fIonWarm
             * gvwT,
             xw,
         )  #
@@ -174,20 +179,18 @@ class ion_column(ColumnDensity):
         **kwargs: Any
     ) -> Union[np.ndarray, float]:
         if self.field is None:
-            raise AttributeError("Error: Column calculating field not set!")
+            raise AttributeError(
+                "Error: Column calculating field not set!"
+            )  # Set in __init__
         element: Union[int, str, AtmElement] = kwargs["element"]
         if "ion" in kwargs.keys():
             ion: Optional[int] = kwargs["ion"]
         else:
             ion = None
         element, ion = parse_atomic_ion_no(element, ion)
-        if self.element is not None and self.ion is not None:
-            if self.element == element and self.ion == ion:
-                self._setup_additional_fields = False
-        else:
-            self.element = element
-            self.ion = ion
-            self._setup_additional_fields = True
+        self.element = element
+        self.ion = ion
+        self.nIon = None
         return super().gen_column(
             b_,
         )

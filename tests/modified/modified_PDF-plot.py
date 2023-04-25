@@ -128,7 +128,7 @@ if __name__ == "__main__":
     ionization = ["PIE", "CIE"]
 
     for condition in product(unmod, ionization):
-        radius = 200.0 if unmod == "isoth" else 20.0  # kpc
+        radius = 20.0  # 200.0 if unmod == "isoth" else 20.0  # kpc
         fig = plt.figure(figsize=(13, 10))
         plot_profile(
             radius=radius,
@@ -144,11 +144,10 @@ if __name__ == "__main__":
         )
         plt.ylim(1e-3, 2.1)
         plt.xlim(5, 7)
-        plt.ylabel(r"$T \mathscr{P}_V(T)$")
-        plt.xlabel(r"$\log_{10} (T [K])$")
-        # ax.yaxis.set_ticks_position('both')
-        # plt.tick_params(axis='both', which='major', labelsize=15, direction="out", pad=5)
-        # plt.tick_params(axis='both', which='minor', labelsize=15, direction="out", pad=5)
+        plt.ylabel(r"$T \mathscr{P}_V(T)$", size=28)
+        plt.xlabel(r"$\log_{10} (T [K])$", size=28)
+        plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
+        plt.tick_params(axis="both", which="minor", length=6, width=1, labelsize=22)
         plt.legend(
             loc="upper right",
             prop={"size": 20},

@@ -11,6 +11,7 @@ from scipy.interpolate import interp1d
 from scipy import integrate
 from scipy.optimize import root
 from typing import Union, Optional, Any
+from abc import ABC, abstractmethod
 
 sys.path.append("..")
 sys.path.append("../submodules/AstroPlasma")
@@ -19,8 +20,8 @@ from misc.constants import mp, mH, kpc, kB, Xp
 from misc.template import modified_field
 
 
-class ColumnDensity:
-    _verbose = False
+class ColumnDensity(ABC):
+    _verbose = True
 
     def __init__(self: "ColumnDensity", redisProf: modified_field) -> None:
         self.redisProf = redisProf
@@ -28,7 +29,14 @@ class ColumnDensity:
         self.nHhot: Optional[np.ndarray] = None
         self.nHwarm: Optional[np.ndarray] = None
         self.field: Optional[str] = None
-        self._setup_additional_fields: bool = True
+        self.radius: Optional[np.ndarray] = None
+
+    def _reset(self: "ColumnDensity") -> None:
+        self.genProf = True
+        self.nHhot = None
+        self.nHwarm = None
+        self.field = None
+        self.radius = None
 
     def _setup_profile(self: "ColumnDensity") -> None:
         mode = self.redisProf.ionization
@@ -83,7 +91,7 @@ class ColumnDensity:
         )
         self.Temp = self.redisProf.TempDist
 
-        if not (hasattr(self, "radius")):
+        if self.radius is None:
             self.radius = np.logspace(np.log10(5.0), np.log10(rend), 80)  # kpc
         if self.nHhot is None or self.nHwarm is None:
             # Temp ...............
@@ -148,21 +156,18 @@ class ColumnDensity:
                         for i in range(self.Temp.shape[0])
                     ]
                 )
-                if self._setup_additional_fields:
-                    # This function must be called after the previous two commands
-                    self._additional_fields(indx, r_val)
-        else:
-            if self._setup_additional_fields:
-                for indx, r_val in enumerate(self.radius):
-                    self._additional_fields(indx, r_val)
-        if self._setup_additional_fields:
-            self._interpolate_additional_fields()
-            self._setup_additional_fields = False
 
+        for indx, r_val in enumerate(self.radius):
+            # This function must be called after the previous two commands
+            self._additional_fields(indx, r_val)
+        self._interpolate_additional_fields()
+
+    @abstractmethod
     def _additional_fields(self: "ColumnDensity", indx: int, r_val: float):
         # Implemented by child classes
         pass
 
+    @abstractmethod
     def _interpolate_additional_fields(self: "ColumnDensity"):
         # Implemented by child classes
         pass

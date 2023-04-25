@@ -3,6 +3,8 @@
 Created on Tue Apr 18 19:49:30 2023
 
 @author: alankar
+
+Usage: python filling.py <halo_ID>
 """
 
 import numpy as np
