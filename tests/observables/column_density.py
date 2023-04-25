@@ -95,10 +95,10 @@ def profile_gen(unmod: str, mod: str, ionization: str) -> None:
 if __name__ == "__main__":
     unmod = [
         "isoth",
-    ]  # "isent"]
+        "isent"]
     mod = [
         "isochor",
-    ]  # "isobar"]
+        "isobar"]
     ionization = ["PIE", "CIE"]
 
     for condition in product(unmod, mod, ionization):

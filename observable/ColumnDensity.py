@@ -21,7 +21,7 @@ from misc.template import modified_field
 
 
 class ColumnDensity(ABC):
-    _verbose = True
+    _verbose = False
 
     def __init__(self: "ColumnDensity", redisProf: modified_field) -> None:
         self.redisProf = redisProf

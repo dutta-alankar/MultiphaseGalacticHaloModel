@@ -108,30 +108,31 @@ if __name__ == "__main__":
         coldens_detect,
         e_coldens_detect,
     ) = observation.col_density_gen(element=element)
-    yerr = np.log(10) * e_coldens_detect * 10.0**coldens_detect
-    plt.errorbar(
-        impact_select_detect / rvir_select_detect,
-        10.0**coldens_detect,
-        yerr=yerr,
-        fmt="o",
-        color="black",
-        label=r"Observations",
-        markersize=10,
-    )
-    plt.plot(
-        impact_select_min / rvir_select_min,
-        10.0**coldens_min,
-        "^",
-        color="black",
-        markersize=10,
-    )
-    plt.plot(
-        impact_select_max / rvir_select_max,
-        10.0**coldens_max,
-        "v",
-        color="black",
-        markersize=10,
-    )
+    if len(e_coldens_detect!=0):
+        yerr = np.log(10) * e_coldens_detect * 10.0**coldens_detect
+        plt.errorbar(
+            impact_select_detect / rvir_select_detect,
+            10.0**coldens_detect,
+            yerr=yerr,
+            fmt="o",
+            color="black",
+            label=r"Observations",
+            markersize=10,
+        )
+        plt.plot(
+            impact_select_min / rvir_select_min,
+            10.0**coldens_min,
+            "^",
+            color="black",
+            markersize=10,
+        )
+        plt.plot(
+            impact_select_max / rvir_select_max,
+            10.0**coldens_max,
+            "v",
+            color="black",
+            markersize=10,
+        )
 
     if element == "O VII":
         # obs
@@ -148,6 +149,8 @@ if __name__ == "__main__":
 
     if element == "O VIII":
         # obs
+        NOVII_obs = 15.68
+        NOVII_err = 0.27
         NOVIII_obs = NOVII_obs - np.log10(4)
         NOVIII_err = NOVII_err - np.log10(4)
         yerr = np.log(10) * NOVIII_err * 10.0**NOVIII_obs
