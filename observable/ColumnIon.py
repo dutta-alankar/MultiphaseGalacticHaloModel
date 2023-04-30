@@ -41,133 +41,61 @@ class ion_column(ColumnDensity):
     def _additional_fields(self: "ion_column", indx: int, r_val: float) -> None:
         mode = self.redisProf.ionization
         redshift = self.redisProf.redshift
-        fIon = Ionization.interpolate_ion_frac
-        mu = Ionization.interpolate_mu
+        nIon = Ionization.interpolate_num_dens
 
         if self.element is None:
             raise ValueError("Error: element not set!")
 
-        # TODO: Replace these with core AstroPlasma functions!
-        if self.file_path is None:
-            self.file_path = os.path.realpath(__file__)
-            dir_loc = os.path.split(self.file_path)[:-1]
-            abn_file = os.path.join(
-                *dir_loc,
-                "..",
-                "submodules",
-                "AstroPlasma",
-                "astro_plasma",
-                "data",
-                "solar_GASS10.abn"
-            )
-            _tmp = None
-            with open(abn_file, "r") as file:
-                _tmp = file.readlines()
-            self.abn = np.array(
-                [float(element.split()[-1]) for element in _tmp[2:32]]
-            )  # Till Zinc
-
-        a0 = self.abn[self.element - 1]
-
         if not (isinstance(self.nIon, np.ndarray)):
             self.nIon = np.zeros_like(self.radius)
 
-        xh = np.log(
-            self.Temp / (self.THotM(r_val) * np.exp(self.redisProf.sigH**2 / 2))
+        nIonWarm = np.array(
+            [
+                nIon(
+                    self.nHwarm[indx, i],
+                    self.Temp[i],
+                    self.metallicity(r_val),
+                    redshift,
+                    mode=mode,
+                    element=self.element,
+                    ion=self.ion,
+                )
+                for i in range(self.Temp.shape[0])
+            ]
         )
-        PvhT = np.exp(-(xh**2) / (2 * self.redisProf.sigH**2)) / (
-            self.redisProf.sigH * np.sqrt(2 * np.pi)
+
+        nIonHot = np.array(
+            [
+                nIon(
+                    self.nHhot[indx, i],
+                    self.Temp[i],
+                    self.metallicity(r_val),
+                    redshift,
+                    mode=mode,
+                    element=self.element,
+                    ion=self.ion,
+                )
+                for i in range(self.Temp.shape[0])
+            ]
         )
+
+        _, gvh, gvw = self.redisProf.probability_ditrib_mod(
+            r_val,
+            ThotM=self.ThotM,
+            fvw=self.fvw,
+            Temp=self.Temp,
+            xmin=self.xmin,
+            Tcutoff=self.Tcut,
+        )
+        TmedVH = self.ThotM(r_val) * np.exp(self.redisProf.sigH**2 / 2)
+        xh = np.log(self.Temp / TmedVH)
         xw = np.log(self.Temp / self.redisProf.TmedVW)
-        gvwT = (
-            self.fvw(r_val)
-            * np.exp(-(xw**2) / (2 * self.redisProf.sigW**2))
-            / (self.redisProf.sigW * np.sqrt(2 * np.pi))
-        )
-        gvhT = np.piecewise(
-            PvhT,
-            [
-                self.Temp >= self.Tcut(r_val),
-            ],
-            [lambda xp: xp, lambda xp: 0.0],
-        )
 
-        self.fIonHot = 10.0 ** np.array(
-            [
-                fIon(
-                    self.nHhot[indx, i],
-                    self.Temp[i],
-                    self.metallicity(r_val),
-                    redshift,
-                    self.element,
-                    self.ion,
-                    mode,
-                )
-                for i in range(self.Temp.shape[0])
-            ]
-        )
+        # Global density sensitive. The extra volume fraction factor is due to that
+        hotInt = (1 - self.fvw(r_val)) * np.trapz(nIonHot * gvh, xh)
+        warmInt = self.fvw(r_val) * np.trapz(nIonWarm * gvw, xw)
 
-        self.mu_hot = np.array(
-            [
-                mu(
-                    self.nHhot[indx, i],
-                    self.Temp[i],
-                    self.metallicity(r_val),
-                    redshift,
-                    mode,
-                )
-                for i in range(self.Temp.shape[0])
-            ]
-        )
-
-        self.fIonWarm = 10.0 ** np.array(
-            [
-                fIon(
-                    self.nHwarm[indx, i],
-                    self.Temp[i],
-                    self.metallicity(r_val),
-                    redshift,
-                    self.element,
-                    self.ion,
-                    mode,
-                )
-                for i in range(self.Temp.shape[0])
-            ]
-        )
-
-        self.mu_warm = np.array(
-            [
-                mu(
-                    self.nHwarm[indx, i],
-                    self.Temp[i],
-                    self.metallicity(r_val),
-                    redshift,
-                    mode,
-                )
-                for i in range(self.Temp.shape[0])
-            ]
-        )
-
-        hotInt = (1 - self.fvw(r_val)) * np.trapz(
-            (self.mu_hot * self.prs_hot(r_val) / (kB * self.Temp))
-            * self.fIonHot
-            * gvhT,
-            xh,
-        )  # Global density sensitive The extra volume fraction factor is due to that
-        warmInt = self.fvw(r_val) * np.trapz(
-            (self.mu_warm * self.prs_warm(r_val) / (kB * self.Temp))
-            * self.fIonWarm
-            * gvwT,
-            xw,
-        )  #
-
-        self.nIon[indx] = (
-            a0
-            * self.metallicity(r_val)
-            * (hotInt + warmInt)
-            * (mp / mH)
-            * Xp(self.metallicity(r_val))
-        )
+        self.nIon[indx] = hotInt + warmInt
 
     def _interpolate_additional_fields(self: "ion_column") -> None:
         self.nIon = interp1d(self.radius, self.nIon, fill_value="extrapolate")
