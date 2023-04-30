@@ -12,8 +12,9 @@ import pickle
 from scipy import interpolate
 from scipy import integrate
 from scipy.optimize import root
+from scipy.special import erf
 from dataclasses import dataclass
-from typing import Optional, Union, Tuple
+from typing import Optional, Union, Tuple, Any
 
 sys.path.append("..")
 from misc.constants import mp, mH, kpc, km, s, K, kB, G, pi, Xp
@@ -289,6 +290,64 @@ class Redistribution(ABC):
 
         return (MHot, MWarm)
 
+    def probability_ditrib_mod(
+        self: "Redistribution", *args: Any, **kwargs: Any
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        if (
+            "ThotM"
+            and "fvw"
+            and "xmin"
+            and "Tcutoff"
+            and "Temp" in kwargs
+            and len(args) == 1
+        ):
+            r_val = args[0]
+            TmedVH = kwargs["ThotM"](r_val) * np.exp(self.sigH**2 / 2)
+            fvw = kwargs["fvw"](r_val)
+            Temp = kwargs["Temp"]
+            xmin = kwargs["xmin"](r_val)
+            Tcutoff = kwargs["Tcutoff"](r_val)
+        elif (
+            "ThotM"
+            and "fvw"
+            and "xmin"
+            and "Tcutoff"
+            and "Temp" in kwargs
+            and len(args) == 0
+        ):
+            TmedVH = kwargs["ThotM"] * np.exp(self.sigH**2 / 2)
+            fvw = kwargs["fvw"]
+            Temp = kwargs["Temp"]
+            xmin = kwargs["xmin"]
+            Tcutoff = kwargs["Tcutoff"]
+        else:
+            TmedVH = self.TmedVH
+            fvw = self.fvw
+            Temp = self.TempDist
+            xmin = self.xmin
+            Tcutoff = np.exp(self.xmin) * self.TmedVH
+
+        xh = np.log(Temp / TmedVH)
+        gv_unmod = np.exp(-(xh**2) / (2 * self.sigH**2)) / (
+            self.sigH * np.sqrt(2 * np.pi)
+        )
+        xw = np.log(Temp / self.TmedVW)
+        gvw = (
+            fvw
+            * np.exp(-(xw**2) / (2 * self.sigW**2))
+            / (self.sigW * np.sqrt(2 * np.pi))
+        )
+        correction_factor = 0.5 * (1 - erf(xmin / (np.sqrt(2) * self.sigH)))
+        gvh = ((1 - fvw) / correction_factor) * np.piecewise(
+            gv_unmod,
+            [
+                Temp >= Tcutoff,
+            ],
+            [lambda xp: xp, lambda xp: 0.0],
+        )
+
+        return (gv_unmod, gvh, gvw)
+
     def PlotDistributionGen(
         self: "Redistribution", radius: float, figure: Optional[plt.figure] = None
     ) -> None:  # Takes in radius in kpc (one value at any call)
@@ -300,9 +359,8 @@ class Redistribution(ABC):
         if _call_profile:
             Tstart = 3.9
             Tstop = 7.9
-            Temp = np.logspace(
-                Tstart, Tstop, 1000
-            )  # Find tcool/tff for these temperature values
+            Temp = np.logspace(Tstart, Tstop, 1000)
+            # Find tcool/tff for these temperature values
             self._plot_xval = np.copy(Temp)
             _ = self.ProfileGen(
                 np.array(
@@ -321,15 +379,8 @@ class Redistribution(ABC):
         self.fig = fig
         fig.gca()
 
-        x = np.log(self.TempDist / (self.TmedVH * np.exp(self.sigH**2 / 2)))
-        gvh = np.exp(-(x**2) / (2 * self.sigH**2)) / (self.sigH * np.sqrt(2 * pi))
-        xp = np.log(self.TempDist / self.TmedVW)
-        gvw = (
-            self.fvw
-            * np.exp(-(xp**2) / (2 * self.sigW**2))
-            / (self.sigW * np.sqrt(2 * pi))
-        )
         Tcutoff = np.exp(self.xmin) * self.TmedVH
+        gv_unmod, gvh, gvw = self.probability_ditrib_mod()
 
         plt.vlines(
             np.log10(Tcutoff),
@@ -364,13 +415,7 @@ class Redistribution(ABC):
 
         plt.semilogy(
             np.log10(self.TempDist),
-            np.piecewise(
-                gvh,
-                [
-                    self.TempDist >= Tcutoff,
-                ],
-                [lambda val: val, lambda val: 0],
-            ),
+            gvh,
             color="tab:red",
             label="hot, modified",
             linewidth=5,
@@ -378,7 +423,7 @@ class Redistribution(ABC):
         )
         plt.semilogy(
             np.log10(self.TempDist),
-            gvh,
+            gv_unmod,
             color="tab:red",
             alpha=0.5,
             label="hot, unmodified",
@@ -402,13 +447,7 @@ class Redistribution(ABC):
                 "T_med_VW": self.TmedVW,
                 "T_hot_u": self.TmedVu * np.exp(-self.sig**2 / 2),
                 "TempDist": self.TempDist,
-                "Hot_mod": np.piecewise(
-                    gvh,
-                    [
-                        self.TempDist >= Tcutoff,
-                    ],
-                    [lambda val: val, lambda val: 0],
-                ),
+                "gv_unmod": gv_unmod,
                 "gv_h": gvh,
                 "gv_w": gvw,
                 "sig_u": self.sig,
@@ -446,7 +485,7 @@ class Redistribution(ABC):
             plt.ylabel(r"$T \mathscr{P}_V(T)$", size=28)
             plt.xlabel(r"$\log_{10} (T [K])$", size=28)
             # ax.yaxis.set_ticks_position('both')
-            plt.legend(
+            lgd = plt.legend(
                 loc="upper right",
                 prop={"size": 20},
                 framealpha=0.3,
@@ -455,6 +494,9 @@ class Redistribution(ABC):
                 bbox_to_anchor=(1.1, 1),
             )
             plt.savefig(
-                "isothermal_isochoric_PDF_%s.png" % self.ionization, transparent=True
+                "isothermal_isochoric_PDF_%s.png" % self.ionization,
+                transparent=True,
+                bbox_inches="tight",
+                bbox_extra_artists=(lgd,),
             )
             plt.show()

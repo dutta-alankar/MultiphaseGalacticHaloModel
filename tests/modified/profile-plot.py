@@ -6,6 +6,7 @@ Created on Mon Apr 10 15:25:17 2023
 """
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import pickle
 
 ## Plot Styling
@@ -45,7 +46,6 @@ matplotlib.rcParams["axes.axisbelow"] = True
 
 def plot_profile(unmod, mod, ionization):
     with open(f"figures/mod_prof_{unmod}_{mod}_{ionization}.pickle", "rb") as data_file:
-        label = "IC" if mod == "isochor" else "IB"
         profile = pickle.load(data_file)
         radius = profile["radius"]
         r200 = 212  # profile["rvir"]
@@ -54,69 +54,95 @@ def plot_profile(unmod, mod, ionization):
         nwarm_local = profile["nwarm_local"]
         nwarm_global = profile["nwarm_global"]
 
-        pl1 = plt.loglog(
-            radius / r200, nhot_local, label=r"$<n^{(h)}>$ (%s)" % label, linestyle="--"
+        plt.loglog(
+            radius / r200,
+            nhot_global,
+            linestyle="-" if mod == "isochor" else ":",
+            color="tab:red",
         )
-        pl2 = plt.loglog(
+        plt.loglog(
             radius / r200,
             nwarm_local,
-            label=r"$<n^{(w)}>$ (%s)" % label,
-            linestyle="--",
+            linestyle="-" if mod == "isochor" else ":",
+            color="tab:cyan",
         )
 
-        if unmod == "isoth" and mod == "isobar":
-            plt.loglog(
-                radius / r200,
-                nhot_global,
-                label=r"$<n^{(h)}>_g$ (%s)" % label,
-                linestyle="-",
-                color=pl1[0].get_color(),
-                # linewidth=2,
-            )
-            plt.loglog(
-                radius / r200,
-                nwarm_global,
-                label=r"$<n^{(w)}>_g$ (%s)" % label,
-                linestyle="-",
-                color=pl2[0].get_color(),
-                # linewidth=2,
-            )
-        else:
-            plt.loglog(
-                radius / r200,
-                nhot_global,
-                label=r"$<n^{(h)}>_g$ (%s)" % label,
-                linestyle="-",
-                color=pl1[0].get_color(),
-            )
-            plt.loglog(
-                radius / r200,
-                nwarm_global,
-                label=r"$<n^{(w)}>_g$ (%s)" % label,
-                linestyle="-",
-                color=pl2[0].get_color(),
-            )
+        plt.loglog(
+            radius / r200,
+            nhot_local,
+            linestyle="-" if mod == "isochor" else ":",
+            color="tab:orange",
+            # linewidth=2,
+        )
+        plt.loglog(
+            radius / r200,
+            nwarm_global,
+            linestyle="-" if mod == "isochor" else ":",
+            color="tab:blue",
+            # linewidth=2,
+        )
+
+
+def make_legend(ax):
+    line_ic = matplotlib.lines.Line2D(
+        [0], [0], color="black", linestyle="-", linewidth=4.0, label="isochor"
+    )
+    line_ib = matplotlib.lines.Line2D(
+        [0], [0], color="black", linestyle=":", linewidth=4.0, label="isobar"
+    )
+
+    legend = plt.legend(
+        loc="upper right",
+        prop={"size": 20},
+        framealpha=0.3,
+        shadow=False,
+        fancybox=False,
+        bbox_to_anchor=(0.96, 1.01),
+        ncol=2,
+        fontsize=18,
+        handles=[line_ic, line_ib],
+        title="Modification type",
+        title_fontsize=20,
+    )
+    legend.get_frame().set_edgecolor(None)
+    legend.get_frame().set_linewidth(0.0)
+    ax.add_artist(legend)
+
+    red_patch = mpatches.Patch(color="tab:red", label=r"$<n^{(h)}>_g$")
+    blue_patch = mpatches.Patch(color="tab:blue", label=r"$<n^{(w)}>_g$")
+    orange_patch = mpatches.Patch(color="tab:orange", label=r"$<n^{(h)}>$")
+    cyan_patch = mpatches.Patch(color="tab:cyan", label=r"$<n^{(w)}>$")
+
+    legend = plt.legend(
+        loc="upper right",
+        prop={"size": 20},
+        framealpha=0.5,
+        shadow=False,
+        fancybox=True,
+        bbox_to_anchor=(1.0, 0.9),
+        ncol=2,
+        fontsize=18,
+        handles=[red_patch, orange_patch, blue_patch, cyan_patch],
+    )
+    legend.get_frame().set_edgecolor("rebeccapurple")
+    legend.get_frame().set_facecolor("ivory")
+    legend.get_frame().set_linewidth(1.0)
 
 
 plt.figure(figsize=(13, 10))
+ax = plt.gca()
 unmod = "isoth"
 mod = "isochor"
 ionization = "PIE"
 plot_profile(unmod=unmod, mod=mod, ionization=ionization)
 mod = "isobar"
 plot_profile(unmod=unmod, mod=mod, ionization=ionization)
-plt.legend(
-    loc="upper left",
-    prop={"size": 20},
-    framealpha=0.3,
-    shadow=False,
-    fancybox=True,
-    bbox_to_anchor=(-0.1, 1.15),
-    ncol=4,
-    fontsize=18,
-)
+
 # plt.xlim(xmin=8, xmax=300)
 # plt.ylim(ymin=1e-5, ymax=1e-2)
+
+make_legend(ax)
+
 plt.xlabel(r"$r/r_{vir}$", size=28)
 plt.ylabel(r"Particle number density $(cm^{-3})$", size=28)
 plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
@@ -125,24 +151,19 @@ plt.savefig(f"figures/{unmod}_{ionization}.png", transparent=False)
 # plt.show()
 
 plt.figure(figsize=(13, 10))
+ax = plt.gca()
 unmod = "isent"
 mod = "isochor"
 plot_profile(unmod=unmod, mod=mod, ionization=ionization)
 mod = "isobar"
 plot_profile(unmod=unmod, mod=mod, ionization=ionization)
-plt.legend(
-    loc="upper left",
-    prop={"size": 20},
-    framealpha=0.3,
-    shadow=False,
-    fancybox=True,
-    bbox_to_anchor=(-0.1, 1.15),
-    ncol=4,
-    fontsize=18,
-)
+
 # plt.xlim(xmin=8, xmax=300)
 # plt.ylim(ymin=1e-5, ymax=1e-2)
-plt.xlabel(r"$r/r_{vir}$", size=28)
+
+make_legend(ax)
+
+plt.xlabel(r"$\rm{r/r_{vir}}$", size=28)
 plt.ylabel(r"Particle number density $(cm^{-3})$", size=28)
 plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
 plt.tick_params(axis="both", which="minor", length=6, width=1, labelsize=22)

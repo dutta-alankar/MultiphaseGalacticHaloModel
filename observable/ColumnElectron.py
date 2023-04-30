@@ -40,27 +40,7 @@ class electron_column(ColumnDensity):
         if not (isinstance(self.ne, np.ndarray)):
             self.ne = np.zeros_like(self.radius)
 
-        xh = np.log(
-            self.Temp / (self.THotM(r_val) * np.exp(self.redisProf.sigH**2 / 2))
-        )
-        PvhT = np.exp(-(xh**2) / (2 * self.redisProf.sigH**2)) / (
-            self.redisProf.sigH * np.sqrt(2 * np.pi)
-        )
-        xw = np.log(self.Temp / self.redisProf.TmedVW)
-        gvwT = (
-            self.fvw(r_val)
-            * np.exp(-(xw**2) / (2 * self.redisProf.sigW**2))
-            / (self.redisProf.sigW * np.sqrt(2 * np.pi))
-        )
-        gvhT = np.piecewise(
-            PvhT,
-            [
-                self.Temp >= self.Tcut(r_val),
-            ],
-            [lambda xp: xp, lambda xp: 0.0],
-        )
-
-        self.neHot = np.array(
+        neHot = np.array(
             [
                 num_dens(
                     self.nHhot[indx, i],
@@ -73,7 +53,7 @@ class electron_column(ColumnDensity):
                 for i in range(self.Temp.shape[0])
             ]
         )
-        self.neWarm = np.array(
+        neWarm = np.array(
             [
                 num_dens(
                     self.nHwarm[indx, i],
@@ -87,9 +67,22 @@ class electron_column(ColumnDensity):
             ]
         )
 
-        hotInt = (1 - self.fvw(r_val)) * np.trapz((self.neHot * gvhT, xh))
-        # global density sensitive
-        warmInt = self.fvw(r_val) * np.trapz((self.neWarm * gvwT, xw))
+        _, gvh, gvw = self.redisProf.probability_ditrib_mod(
+            r_val,
+            ThotM=self.ThotM,
+            fvw=self.fvw,
+            Temp=self.Temp,
+            xmin=self.xmin,
+            Tcut=self.Tcut,
+        )
+        TmedVH = self.ThotM(r_val) * np.exp(self.redisProf.sigH**2 / 2)
+        xh = np.log(self.Temp / TmedVH)
+        xw = np.log(self.Temp / self.redisProf.TmedVW)
+
+        # Global density sensitive. The extra volume fraction factor is due to that
+        hotInt = (1 - self.fvw(r_val)) * np.trapz(neHot * gvh, xh)
+        warmInt = self.fvw(r_val) * np.trapz(neWarm * gvw, xw)
+
         self.ne[indx] = hotInt + warmInt
 
     def _interpolate_additional_fields(self: "electron_column"):

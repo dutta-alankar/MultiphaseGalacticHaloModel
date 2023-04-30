@@ -72,6 +72,9 @@ class ColumnDensity(ABC):
         self.Tcut = interp1d(
             self.redisProf.radius, self.redisProf.Tcut, fill_value="extrapolate"
         )
+        self.xmin = interp1d(
+            self.redisProf.radius, self.redisProf.xmin, fill_value="extrapolate"
+        )
         self.metallicity = interp1d(
             self.redisProf.radius,
             self.redisProf.unmodified.metallicity,
@@ -84,7 +87,7 @@ class ColumnDensity(ABC):
             self.redisProf.radius, self.redisProf.TmedVH, fill_value="extrapolate"
         )
 
-        self.THotM = interp1d(
+        self.ThotM = interp1d(
             self.redisProf.radius,
             (self.redisProf.prs_hot / (self.redisProf.nhot_local * kB)),
             fill_value="extrapolate",

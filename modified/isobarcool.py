@@ -32,8 +32,8 @@ class IsobarCoolRedistribution(Redistribution):
         self: "IsobarCoolRedistribution", xmin: float, indx: int
     ) -> Tuple[float, float]:
         fmw = 0.5 * (1 + erf((xmin + self.sig**2) / (np.sqrt(2) * self.sig)))
-        if fmw >= 0.5:
-            fmw = 0.5
+        if fmw >= 0.4:
+            fmw = 0.4
         fvw = (
             (self.TmedVW / self.TmedVu[indx])
             * np.exp(-(self.sigW**2 - self.sig**2) / 2)

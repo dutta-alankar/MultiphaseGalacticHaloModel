@@ -9,6 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import matplotlib
+import matplotlib.patches as mpatches
+from matplotlib.legend_handler import HandlerTuple
 from itertools import product
 from parse_observation import observedColDens
 
@@ -47,7 +49,7 @@ matplotlib.rcParams["legend.handlelength"] = 2
 matplotlib.rcParams["axes.axisbelow"] = True
 
 
-def plot_column_density(unmod, mod, ion):
+def plot_column_density(unmod, mod, ion, alpha=0.5):
     states = ["PIE", "CIE"]
 
     for ionization in states:
@@ -58,38 +60,150 @@ def plot_column_density(unmod, mod, ion):
             impact = data["impact"]
             column_density = data[f"N_{ion}"]
             rCGM = data["rCGM"]
-            extra_label = ("Isothermal" if unmod == "isoth" else "Isentropic") + (
-                " (IC)" if mod == "isochor" else "(IB)"
-            )
             if ionization == "PIE":
-                pl1 = plt.loglog(
+                plt.loglog(
                     np.array(impact) / rCGM,
                     column_density,
-                    label=extra_label,
-                    linestyle="-",
+                    linestyle="-" if mod == "isochor" else ":",
+                    alpha=1.0,
+                    color="salmon" if unmod == "isoth" else "cadetblue",
                 )
             else:
                 plt.loglog(
                     np.array(impact) / rCGM,
                     column_density,
-                    linestyle="--",
-                    color=pl1[0].get_color(),
+                    linestyle="-" if mod == "isochor" else ":",
+                    alpha=alpha,
+                    color="salmon" if unmod == "isoth" else "cadetblue",
                 )
 
 
+def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
+    line_ic = matplotlib.lines.Line2D(
+        [0],
+        [0],
+        color="black",
+        linestyle="-",
+        linewidth=4.0,
+        label="isochor",
+    )
+    line_ib = matplotlib.lines.Line2D(
+        [0], [0], color="black", linestyle=":", linewidth=4.0, label="isobar"
+    )
+    legend_header = plt.legend(
+        loc="lower left",
+        prop={"size": 20},
+        framealpha=0.3,
+        shadow=False,
+        fancybox=False,
+        bbox_to_anchor=(0.06, 0.17) if obs_handles is not None else (0.06, 0.12),
+        ncol=2,
+        fontsize=18,
+        handles=[line_ic, line_ib],
+        title="Modification type",
+        title_fontsize=20,
+    )
+    legend_header.get_frame().set_edgecolor(None)
+    legend_header.get_frame().set_linewidth(0.0)
+    ax.add_artist(legend_header)
+
+    # legend_header._legend_box.align = "left"
+    legend_header.get_frame().set_facecolor("white")
+    legend_header.get_frame().set_edgecolor(None)
+    legend_header.get_frame().set_linewidth(0.0)
+    ax.add_artist(legend_header)
+
+    red_patch = mpatches.Patch(color="salmon")
+    blue_patch = mpatches.Patch(color="cadetblue")
+    light_red_patch = mpatches.Patch(color="salmon", alpha=alpha)
+    light_blue_patch = mpatches.Patch(color="cadetblue", alpha=alpha)
+
+    if obs_handles is not None:
+        legend = plt.legend(
+            loc="lower left",
+            prop={"size": 20},
+            framealpha=0.3,
+            shadow=False,
+            fancybox=True,
+            bbox_to_anchor=(0.03, 0.01),
+            ncol=2,
+            fontsize=18,
+            handles=[
+                red_patch,
+                (red_patch, blue_patch),
+                tuple(obs_handles[::-1]),
+                blue_patch,
+                (light_red_patch, light_blue_patch),
+            ],
+            labels=[
+                "isothermal",
+                "PIE",
+                obs_labels[0],
+                "isentropic",
+                "CIE",
+            ],
+            handler_map={
+                tuple: HandlerTuple(ndivide=None),
+            },
+            handlelength=1.5,
+        )
+    else:
+        legend = plt.legend(
+            loc="lower left",
+            prop={"size": 20},
+            framealpha=0.3,
+            shadow=False,
+            fancybox=True,
+            bbox_to_anchor=(0.03, 0.01),
+            ncol=2,
+            fontsize=18,
+            handles=[
+                red_patch,
+                (red_patch, blue_patch),
+                blue_patch,
+                (light_red_patch, light_blue_patch),
+            ],
+            labels=[
+                "isothermal",
+                "PIE",
+                "isentropic",
+                "CIE",
+            ],
+            handler_map={
+                tuple: HandlerTuple(ndivide=None),
+            },
+            handlelength=1.5,
+        )
+    # legend._legend_box.align = "left"
+    # print(legend.get_texts()[2].__dict__)
+    # print(dir(legend.get_texts()[2]) )
+    # help(legend.get_texts()[2].set_bbox)
+
+    # legend.get_texts()[2].set_ha("center")
+    legend.get_texts()[2].update(
+        {
+            "ha": "right",
+            "position": (1.0, 0.5),
+        }
+    )
+    legend.get_frame().set_edgecolor("rebeccapurple")
+    legend.get_frame().set_facecolor("ivory")
+    legend.get_frame().set_linewidth(1.0)
+    ax.add_artist(legend)
+    # print(ax.get_legend_handles_labels())
+    # ax.get_legend_handles_labels()[0][-1].get_texts().set_ha("center")
+
+
 if __name__ == "__main__":
-    unmod = [
-        "isoth",
-    ]  # "isent"]
-    mod = [
-        "isochor",
-    ]  # "isobar"]
-    element = "O VI"  # "OVI"
+    unmod = ["isoth", "isent"]
+    mod = ["isochor", "isobar"]
+    element = "O VIII"  # "OVI"
+    alpha = 0.5
 
     plt.figure(figsize=(13, 10))
 
     for condition in product(unmod, mod):
-        plot_column_density(*condition, "".join(element.split()))
+        plot_column_density(*condition, "".join(element.split()), alpha=alpha)
 
     observation = observedColDens()
 
@@ -108,7 +222,7 @@ if __name__ == "__main__":
         coldens_detect,
         e_coldens_detect,
     ) = observation.col_density_gen(element=element)
-    if len(e_coldens_detect!=0):
+    if len(e_coldens_detect != 0):
         yerr = np.log(10) * e_coldens_detect * 10.0**coldens_detect
         plt.errorbar(
             impact_select_detect / rvir_select_detect,
@@ -124,6 +238,7 @@ if __name__ == "__main__":
             10.0**coldens_min,
             "^",
             color="black",
+            label=r"Observations",
             markersize=10,
         )
         plt.plot(
@@ -131,8 +246,13 @@ if __name__ == "__main__":
             10.0**coldens_max,
             "v",
             color="black",
+            label=r"Observations",
             markersize=10,
         )
+        obs_handles, obs_labels = plt.gca().get_legend_handles_labels()
+        make_legend(plt.gca(), obs_handles[-3:], obs_labels[-3:], alpha=alpha)
+    else:
+        make_legend(plt.gca(), alpha=alpha)
 
     if element == "O VII":
         # obs
@@ -146,6 +266,7 @@ if __name__ == "__main__":
             alpha=0.2,
             zorder=0,
         )
+        plt.ylim(ymin=2e13)
 
     if element == "O VIII":
         # obs
@@ -161,8 +282,9 @@ if __name__ == "__main__":
             alpha=0.2,
             zorder=0,
         )
+        plt.ylim(ymin=2e13)
 
-    plt.legend()
+    # plt.legend()
     plt.xlabel(r"Impact parameter [$r_{vir}$]", size=28)
     plt.ylabel(r"Column density of %s ($cm^{-2}$)" % element, size=28)
     plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)

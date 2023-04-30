@@ -5,7 +5,7 @@ Created on Wed Apr 12 14:12:27 2023
 @author: alankar
 """
 import numpy as np
-from typing import Protocol, Optional, Union
+from typing import Protocol, Optional, Union, Any, Tuple
 
 
 class dm_halo(Protocol):
@@ -58,9 +58,17 @@ class modified_field(Protocol):
     nHwarm_local: np.ndarray
     fvw: np.ndarray
     radius: np.ndarray
+    xmin: np.ndarray
 
     def ProfileGen(
         self: "modified_field",
         radius: Union[float, int, list[float], list[int], np.ndarray],
     ) -> Optional[tuple]:
+        pass
+
+    def probability_ditrib_mod(
+        self: "modified_field",
+        *args: Any,
+        **kwargs: Any,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         pass

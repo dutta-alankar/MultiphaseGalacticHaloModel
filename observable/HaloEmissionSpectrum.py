@@ -185,29 +185,23 @@ def luminosity_spectrum_gen(redisProf: modified_field) -> np.ndarray:
         Tcut,
     ) = redisProf.ProfileGen(radius)
     metallicity = redisProf.unmodified.metallicity
+    xmin = redisProf.xmin
 
     Temp = redisProf.TempDist
 
-    THotM = redisProf.prs_hot / (redisProf.nhot_local * kB)
+    ThotM = redisProf.prs_hot / (redisProf.nhot_local * kB)
 
     for indx, r_val in enumerate(radius):
-        xh = np.log(Temp / (THotM[indx] * np.exp(redisProf.sigH**2 / 2)))
-        PvhT = np.exp(-(xh**2) / (2 * redisProf.sigH**2)) / (
-            redisProf.sigH * np.sqrt(2 * np.pi)
+        _, gvh, gvw = redisProf.probability_ditrib_mod(
+            ThotM=ThotM[indx],
+            fvw=fvw[indx],
+            Temp=Temp,
+            xmin=xmin[indx],
+            Tcutoff=Tcut[indx],
         )
+        TmedVH = ThotM[indx] * np.exp(redisProf.sigH**2 / 2)
+        xh = np.log(Temp / TmedVH)
         xw = np.log(Temp / redisProf.TmedVW)
-        gvwT = (
-            fvw[indx]
-            * np.exp(-(xw**2) / (2 * redisProf.sigW**2))
-            / (redisProf.sigW * np.sqrt(2 * np.pi))
-        )
-        gvhT = np.piecewise(
-            PvhT,
-            [
-                Temp >= Tcut[indx],
-            ],
-            [lambda xp: xp, lambda xp: 0.0],
-        )
 
         # Assumption nT and \rho T are all constant
         nHhot = (
@@ -238,7 +232,7 @@ def luminosity_spectrum_gen(redisProf: modified_field) -> np.ndarray:
             [
                 fourPiNujNu(nHhot[i], Temp[i], metallicity[indx], redshift, mode)[:, 1]
                 / energy
-                for i, xhp in enumerate(xh)
+                for i in range(Temp.shape[0])
             ]
         )
 
@@ -246,16 +240,16 @@ def luminosity_spectrum_gen(redisProf: modified_field) -> np.ndarray:
             [
                 fourPiNujNu(nHwarm[i], Temp[i], metallicity[indx], redshift, mode)[:, 1]
                 / energy
-                for i, xwp in enumerate(xw)
+                for i in range(Temp.shape[0])
             ]
         )
 
         hotInt = (1 - redisProf.fvw[indx]) * np.array(
-            [simpson(fourPiNujNu_hot[:, i] * gvhT, xh) for i in range(energy.shape[0])]
+            [simpson(fourPiNujNu_hot[:, i] * gvh, xh) for i in range(energy.shape[0])]
         )  # global density sensitive
 
         warmInt = redisProf.fvw[indx] * np.array(
-            [simpson(fourPiNujNu_warm[:, i] * gvwT, xw) for i in range(energy.shape[0])]
+            [simpson(fourPiNujNu_warm[:, i] * gvw, xw) for i in range(energy.shape[0])]
         )  # global density sensitive
 
         # erg/s/keV all solid angles covered

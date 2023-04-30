@@ -59,7 +59,7 @@ def plot_profile(radius, unmod, all_mods, ionization, figure):
             TmedVu = profile["T_hot_M"] * np.exp(profile["sig_u"] ** 2 / 2.0)
             TmedVW = profile["T_med_VW"]
             TempDist = profile["TempDist"]
-            gvH_mod = profile["Hot_mod"]
+            gv_unmod = profile["gv_unmod"]
             gvh = profile["gv_h"]
             gvw = profile["gv_w"]
             if mod == "isochor":
@@ -69,7 +69,7 @@ def plot_profile(radius, unmod, all_mods, ionization, figure):
                     2.1,
                     colors="black",
                     linestyles="--",
-                    label=r"$T_c\ (t_{\rm cool}/t_{\rm ff}=%.1f)$" % cutoff,
+                    label=r"$T_c\ (t_{\rm cool}/t_{\rm ff}=%d)$" % cutoff,
                     linewidth=3,
                     zorder=20,
                     alpha=0.6,
@@ -96,26 +96,26 @@ def plot_profile(radius, unmod, all_mods, ionization, figure):
                 )
                 ax.semilogy(
                     np.log10(TempDist),
-                    gvH_mod,
-                    color="tab:red",
-                    label="hot, modified",
-                    linewidth=5,
-                    zorder=5,
-                )
-                ax.semilogy(
-                    np.log10(TempDist),
-                    gvh,
+                    gv_unmod,
                     color="tab:red",
                     alpha=0.5,
-                    label="hot, unmodified",
+                    label="hot, unmod",
                     linewidth=5,
                     zorder=6,
                 )
             ax.semilogy(
                 np.log10(TempDist),
+                gvh,
+                color="tab:orange" if mod == "isobar" else "tab:red",
+                label=f"hot, mod, {'IB' if mod == 'isobar' else 'IC'}",
+                linewidth=5,
+                zorder=5,
+            )
+            ax.semilogy(
+                np.log10(TempDist),
                 gvw,
                 color="tab:blue" if mod == "isobar" else "tab:cyan",
-                label=f"warm, {mod}",
+                label=f"warm, mod, {'IB' if mod == 'isobar' else 'IC'}",
                 linestyle="--",
                 linewidth=5,
                 zorder=7,
@@ -142,19 +142,65 @@ if __name__ == "__main__":
             % (radius, condition[1]),
             size=28,
         )
-        plt.ylim(1e-3, 2.1)
-        plt.xlim(5, 7)
+        plt.ylim(1e-3, 2.4)
+        plt.xlim(4.9, 7)
         plt.ylabel(r"$T \mathscr{P}_V(T)$", size=28)
         plt.xlabel(r"$\log_{10} (T [K])$", size=28)
         plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
         plt.tick_params(axis="both", which="minor", length=6, width=1, labelsize=22)
-        plt.legend(
+
+        current_handles, current_labels = plt.gca().get_legend_handles_labels()
+
+        legend1 = plt.legend(
+            loc="upper left",
+            prop={"size": 20},
+            framealpha=0.6,
+            shadow=False,
+            fancybox=False,
+            bbox_to_anchor=(-0.01, 0.97),
+            ncol=1,
+            fontsize=18,
+            handles=current_handles[:3],
+            labels=current_labels[:3],
+            handlelength=1.5,
+        )
+        # legend1.get_frame().set_edgecolor(None)
+        # legend1.get_frame().set_facecolor(None)
+        legend1.get_frame().set_linewidth(0.0)
+        plt.gca().add_artist(legend1)
+
+        legend2 = plt.legend(
             loc="upper right",
             prop={"size": 20},
-            framealpha=0.3,
+            framealpha=0.8,
             shadow=False,
             fancybox=True,
-            bbox_to_anchor=(1.1, 1),
+            bbox_to_anchor=(1.06, 0.98),
+            ncol=1,
+            fontsize=18,
+            handles=[
+                current_handles[3],
+                current_handles[4],
+                current_handles[6],
+                current_handles[5],
+                current_handles[7],
+            ],
+            labels=[
+                current_labels[3],
+                current_labels[4],
+                current_labels[6],
+                current_labels[5],
+                current_labels[7],
+            ],
         )
-        plt.savefig(f"figures/PDF_{condition[0]}_{condition[1]}.png", transparent=False)
+        legend2.get_frame().set_edgecolor("rebeccapurple")
+        legend2.get_frame().set_facecolor("ivory")
+        legend2.get_frame().set_linewidth(1.0)
+        plt.savefig(
+            f"figures/PDF_{condition[0]}_{condition[1]}.png",
+            transparent=False,
+            bbox_extra_artists=(legend1, legend2),
+            bbox_inches="tight",
+        )
+        # Note that the bbox_extra_artists must be an iterable
         # plt.show()

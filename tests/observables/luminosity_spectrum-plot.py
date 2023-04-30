@@ -115,7 +115,7 @@ if __name__ == "__main__":
     plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
     plt.tick_params(axis="both", which="minor", length=6, width=1, labelsize=22)
     plt.savefig(
-        f"figures/spectrum_{unmod[0]+unmod[1]}_{mod[0]}_{ionization[0]}.png",
+        f"figures/spectrum_{unmod[0]}+{unmod[1]}_{mod[0]}_{ionization[0]}.png",
         transparent=False,
     )
     # plt.show()
