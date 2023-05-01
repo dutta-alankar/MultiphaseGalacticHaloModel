@@ -197,8 +197,8 @@ def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
 if __name__ == "__main__":
     unmod = ["isoth", "isent"]
     mod = ["isochor", "isobar"]
-    element = "O VIII"  # "OVI"
-    alpha = 0.5
+    element = "N V"  # "OVI"
+    alpha = 0.3
 
     plt.figure(figsize=(13, 10))
 

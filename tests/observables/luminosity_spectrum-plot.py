@@ -76,12 +76,12 @@ def spectrum(
     _ = list(map(lambda till: calc_SB(Emin, till, energy, luminosity, rCGM), Emax))
 
     ax = fig.gca()
-    unmod_label = "Isothermal" if unmod == "isoth" else "Isentropic"
-    mod_label = "Isochoric" if mod == "isochor" else "Isobaric"
+    unmod_label = "isothermal" if unmod == "isoth" else "isentropic"
+    mod_label = "isochoric" if mod == "isochor" else "isobaric"
     plotted_line = ax.loglog(
         energy,
         luminosity,
-        label=f"{unmod_label} with {mod_label} re-distribution ({ionization})",
+        label=f"{unmod_label} profile with {mod_label} re-distribution ({ionization})",
     )
     return plotted_line[0]
 
@@ -91,6 +91,9 @@ if __name__ == "__main__":
     unmod = ["isoth", "isent"]
     mod = ["isochor", "isobar"]
     ionization = ["PIE", "CIE"]
+
+    plt.gca().axvspan(0.3, 0.6, alpha=0.5, color="gray")
+    plt.gca().axvspan(0.3, 2.0, alpha=0.3, color="khaki")
 
     curves = []
     for condition in product(

@@ -104,8 +104,8 @@ def gen_measure(
 
 
 if __name__ == "__main__":
-    unmod = ["isent", "isoth"]
-    mod = ["isobar", "isochor"]
+    unmod = ["isoth", "isent"]
+    mod = ["isochor", "isobar"]
     ionization = ["CIE", "PIE"]
 
     b = np.linspace(-90, 90, 50)

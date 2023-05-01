@@ -21,13 +21,13 @@ import observable.maps as maps
 from misc.template import modified_field
 from typing import Union, Optional, List, Callable
 from astro_plasma import Ionization
+from observable.internal_interpolation import _interpolate_internal_variables
 
 
-class Measure(maps.MapInit, ABC):
+class Measure(maps.MapInit, _interpolate_internal_variables, ABC):
     def __init__(self, redisProf: modified_field):
         super().__init__(redisProf)
         self.redisProf = redisProf
-        self._already_profile_generated = False
         self.observable: Optional[Union[float, int, np.ndarray]] = None
 
     def _generate_measurable(
@@ -36,182 +36,135 @@ class Measure(maps.MapInit, ABC):
         mode = self.redisProf.ionization
         redshift = self.redisProf.redshift
 
-        def num_dens(tup):
-            return Ionization.interpolate_num_dens(*tup)
-
-        # redistributed profile is generated for only a limited number of points and used for interpolation
-        if not (self._already_profile_generated):
-            rend = (
-                1.01
-                * self.redisProf.unmodified.rCGM
-                * (self.redisProf.unmodified.UNIT_LENGTH / kpc)
-            )
-            print("Doing one time profile calculation", flush=True)
-            radius_ = np.logspace(np.log10(5.0), np.log10(rend), 20)  # kpc
-            (
-                nhot_local,
-                nwarm_local,
-                nhot_global,
-                nwarm_global,
-                fvw,
-                fmw,
-                prs_hot,
-                prs_warm,
-                Tcut,
-            ) = self.redisProf.ProfileGen(radius_)
-            self._already_profile_generated = True
-            print("Complete!", flush=True)
-
+        _ = self._interpolate_vars()
         mu = Ionization.interpolate_mu
-
-        nHhot_local = interp1d(
-            self.redisProf.radius, self.redisProf.nHhot_local, fill_value="extrapolate"
-        )
-        nHwarm_local = interp1d(
-            self.redisProf.radius, self.redisProf.nHwarm_local, fill_value="extrapolate"
-        )
-        prs_hot = interp1d(
-            self.redisProf.radius, self.redisProf.prs_hot, fill_value="extrapolate"
-        )
-        prs_warm = interp1d(
-            self.redisProf.radius, self.redisProf.prs_warm, fill_value="extrapolate"
-        )
-        Tcut = interp1d(
-            self.redisProf.radius, self.redisProf.Tcut, fill_value="extrapolate"
-        )
-        metallicity = interp1d(
-            self.redisProf.radius,
-            self.redisProf.unmodified.metallicity,
-            fill_value="extrapolate",
-        )
-        fvw = interp1d(
-            self.redisProf.radius, self.redisProf.fvw, fill_value="extrapolate"
-        )
-        TmedVH = interp1d(
-            self.redisProf.radius, self.redisProf.TmedVH, fill_value="extrapolate"
-        )
-
-        Temp = self.redisProf.TempDist
-        THotM = interp1d(
-            self.redisProf.radius,
-            (self.redisProf.prs_hot / (self.redisProf.nhot_local * kB)),
-            fill_value="extrapolate",
-        )
+        num_dens = lambda tup: Ionization.interpolate_num_dens(*tup)
 
         def _weighted_avg_quantity(
             r_val: float,
             nHhot: np.ndarray,
             nHwarm: np.ndarray,
-            gvhT: np.ndarray,
+            gvh: np.ndarray,
             xh: np.ndarray,
-            gvwT: np.ndarray,
+            gvw: np.ndarray,
             xw: np.ndarray,
             part_types: list[str],
         ) -> float:
-            quanHot = np.zeros((len(part_types), Temp.shape[0]))
+            quanHot = np.zeros((len(part_types), self.Temp.shape[0]))
             quanWarm = np.zeros_like(quanHot)
             for indx, part_type in enumerate(part_types):
                 tup = (
                     *zip(
                         nHhot,
-                        Temp,
-                        metallicity(r_val) * np.ones(Temp.shape[0]),
-                        redshift * np.ones(Temp.shape[0]),
+                        self.Temp,
+                        self.metallicity(r_val) * np.ones(self.Temp.shape[0]),
+                        redshift * np.ones(self.Temp.shape[0]),
                         [
                             mode,
                         ]
-                        * Temp.shape[0],
+                        * self.Temp.shape[0],
                         [
                             part_type,
                         ]
-                        * Temp.shape[0],
+                        * self.Temp.shape[0],
                     ),
                 )
 
-                quanHot[indx, :] = np.array((*map(num_dens, tup),)).reshape(Temp.shape)
+                quanHot[indx, :] = np.array((*map(num_dens, tup),)).reshape(
+                    self.Temp.shape
+                )
 
                 tup = (
                     *zip(
                         nHwarm,
-                        Temp,
-                        metallicity(r_val) * np.ones(Temp.shape[0]),
-                        redshift * np.ones(Temp.shape[0]),
+                        self.Temp,
+                        self.metallicity(r_val) * np.ones(self.Temp.shape[0]),
+                        redshift * np.ones(self.Temp.shape[0]),
                         [
                             mode,
                         ]
-                        * Temp.shape[0],
+                        * self.Temp.shape[0],
                         [
                             part_type,
                         ]
-                        * Temp.shape[0],
+                        * self.Temp.shape[0],
                     ),
                 )
 
-                quanWarm[indx, :] = np.array((*map(num_dens, tup),)).reshape(Temp.shape)
+                quanWarm[indx, :] = np.array((*map(num_dens, tup),)).reshape(
+                    self.Temp.shape
+                )
 
-            hotInt = (1 - fvw(r_val)) * np.trapz(
-                np.product(quanHot, axis=0) * gvhT, xh
-            )  # global density sensitive, extra filling factor for global
+            hotInt = (1 - self.fvw(r_val)) * np.trapz(
+                np.product(quanHot, axis=0) * gvh, xh
+            )
+            # global density sensitive, extra filling factor for global
 
-            warmInt = fvw(r_val) * np.trapz(np.product(quanWarm, axis=0) * gvwT, xw)
+            warmInt = self.fvw(r_val) * np.trapz(np.product(quanWarm, axis=0) * gvw, xw)
 
             return hotInt + warmInt
 
         def _calc(r_val: Union[float, int]) -> np.ndarray:
-            xh = np.log(Temp / (THotM(r_val) * np.exp(self.redisProf.sigH**2 / 2)))
-            PvhT = np.exp(-(xh**2) / (2 * self.redisProf.sigH**2)) / (
-                self.redisProf.sigH * np.sqrt(2 * np.pi)
+            _, gvh, gvw = self.redisProf.probability_ditrib_mod(
+                r_val,
+                ThotM=self.ThotM,
+                fvw=self.fvw,
+                Temp=self.Temp,
+                xmin=self.xmin,
+                Tcutoff=self.Tcut,
             )
-            xw = np.log(Temp / self.redisProf.TmedVW)
-            gvwT = (
-                fvw(r_val)
-                * np.exp(-(xw**2) / (2 * self.redisProf.sigW**2))
-                / (self.redisProf.sigW * np.sqrt(2 * np.pi))
-            )
-            gvhT = np.piecewise(
-                PvhT,
-                [
-                    Temp >= Tcut(r_val),
-                ],
-                [lambda xp: xp, lambda xp: 0.0],
-            )
+            TmedVH = self.ThotM(r_val) * np.exp(self.redisProf.sigH**2 / 2)
+            xh = np.log(self.Temp / TmedVH)
+            xw = np.log(self.Temp / self.redisProf.TmedVW)
 
             # Approximation is that nH T is also constant like n T used as guess
             nHhot_guess = (
-                nHhot_local(r_val)
-                * TmedVH(r_val)
+                self.nHhot_local(r_val)
+                * TmedVH
                 * np.exp(-self.redisProf.sigH**2 / 2)
-                / Temp
+                / self.Temp
             )  # CGS
             nHwarm_guess = (
-                nHwarm_local(r_val)
+                self.nHwarm_local(r_val)
                 * self.redisProf.TmedVW
                 * np.exp(-self.redisProf.sigW**2 / 2)
-                / Temp
+                / self.Temp
             )  # CGS
 
             nHhot = 10.0 ** np.array(
                 [
                     root(
-                        lambda LognH: (prs_hot(r_val) / (kB * Temp[i]))
-                        * Xp(metallicity(r_val))
-                        * mu(10**LognH, Temp[i], metallicity(r_val), redshift, mode)
+                        lambda LognH: (self.prs_hot(r_val) / (kB * self.Temp[i]))
+                        * Xp(self.metallicity(r_val))
+                        * mu(
+                            10**LognH,
+                            self.Temp[i],
+                            self.metallicity(r_val),
+                            redshift,
+                            mode,
+                        )
                         - (mH / mp) * (10**LognH),
                         np.log10(nHhot_guess[i]),
                     ).x[0]
-                    for i in range(Temp.shape[0])
+                    for i in range(self.Temp.shape[0])
                 ]
             )
             nHwarm = 10.0 ** np.array(
                 [
                     root(
-                        lambda LognH: (prs_warm(r_val) / (kB * Temp[i]))
-                        * Xp(metallicity(r_val))
-                        * mu(10**LognH, Temp[i], metallicity(r_val), redshift, mode)
+                        lambda LognH: (self.prs_warm(r_val) / (kB * self.Temp[i]))
+                        * Xp(self.metallicity(r_val))
+                        * mu(
+                            10**LognH,
+                            self.Temp[i],
+                            self.metallicity(r_val),
+                            redshift,
+                            mode,
+                        )
                         - (mH / mp) * (10**LognH),
                         np.log10(nHwarm_guess[i]),
                     ).x[0]
-                    for i in range(Temp.shape[0])
+                    for i in range(self.Temp.shape[0])
                 ]
             )
 
@@ -219,16 +172,16 @@ class Measure(maps.MapInit, ABC):
                 r_val,
                 nHhot,
                 nHwarm,
-                gvhT,
+                gvh,
                 xh,
-                gvwT,
+                gvw,
                 xw,
                 [
                     "electron",
                 ],
             )
             neni = _weighted_avg_quantity(
-                r_val, nHhot, nHwarm, gvhT, xh, gvwT, xw, ["electron", "ion"]
+                r_val, nHhot, nHwarm, gvh, xh, gvw, xw, ["electron", "ion"]
             )
 
             return np.array([ne, neni])

@@ -7,7 +7,6 @@ Created on Mon Apr  3 01:48:58 2023
 
 import sys
 import numpy as np
-from scipy.interpolate import interp1d
 from scipy import integrate
 from scipy.optimize import root
 from typing import Union, Optional, Any
@@ -18,14 +17,12 @@ sys.path.append("../submodules/AstroPlasma")
 from astro_plasma import Ionization
 from misc.constants import mp, mH, kpc, kB, Xp
 from misc.template import modified_field
+from observable.internal_interpolation import _interpolate_internal_variables
 
 
-class ColumnDensity(ABC):
-    _verbose = False
-
+class ColumnDensity(ABC, _interpolate_internal_variables):
     def __init__(self: "ColumnDensity", redisProf: modified_field) -> None:
         self.redisProf = redisProf
-        self.genProf: bool = True
         self.nHhot: Optional[np.ndarray] = None
         self.nHwarm: Optional[np.ndarray] = None
         self.field: Optional[str] = None
@@ -42,57 +39,7 @@ class ColumnDensity(ABC):
         mode = self.redisProf.ionization
         redshift = self.redisProf.redshift
 
-        # Use low initial resolution for interpolation
-        if self.genProf:
-            rend = (
-                1.05
-                * self.redisProf.unmodified.rCGM
-                * (self.redisProf.unmodified.UNIT_LENGTH / kpc)
-            )
-            if self._verbose:
-                print("Doing one time profile calculation", flush=True)
-            radius_ = np.logspace(np.log10(5.0), np.log10(rend), 20)  # kpc
-            _ = self.redisProf.ProfileGen(radius_)
-            self.genProf = False
-            if self._verbose:
-                print("Complete!", flush=True)
-
-        self.nHhot_local = interp1d(
-            self.redisProf.radius, self.redisProf.nHhot_local, fill_value="extrapolate"
-        )
-        self.nHwarm_local = interp1d(
-            self.redisProf.radius, self.redisProf.nHwarm_local, fill_value="extrapolate"
-        )
-        self.prs_hot = interp1d(
-            self.redisProf.radius, self.redisProf.prs_hot, fill_value="extrapolate"
-        )
-        self.prs_warm = interp1d(
-            self.redisProf.radius, self.redisProf.prs_warm, fill_value="extrapolate"
-        )
-        self.Tcut = interp1d(
-            self.redisProf.radius, self.redisProf.Tcut, fill_value="extrapolate"
-        )
-        self.xmin = interp1d(
-            self.redisProf.radius, self.redisProf.xmin, fill_value="extrapolate"
-        )
-        self.metallicity = interp1d(
-            self.redisProf.radius,
-            self.redisProf.unmodified.metallicity,
-            fill_value="extrapolate",
-        )
-        self.fvw = interp1d(
-            self.redisProf.radius, self.redisProf.fvw, fill_value="extrapolate"
-        )
-        self.TmedVH = interp1d(
-            self.redisProf.radius, self.redisProf.TmedVH, fill_value="extrapolate"
-        )
-
-        self.ThotM = interp1d(
-            self.redisProf.radius,
-            (self.redisProf.prs_hot / (self.redisProf.nhot_local * kB)),
-            fill_value="extrapolate",
-        )
-        self.Temp = self.redisProf.TempDist
+        rend = self._interpolate_vars()
 
         if self.radius is None:
             self.radius = np.logspace(np.log10(5.0), np.log10(rend), 80)  # kpc

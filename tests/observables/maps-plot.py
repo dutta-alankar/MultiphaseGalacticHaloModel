@@ -127,8 +127,10 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     axes_labels = [r"$%d^{\circ}$" % label for label in axes_labels]
     ax.set_xticklabels(axes_labels)
     plt.savefig(
-        f"figures/map_moll_{map_type}_{unmod}_{mod}_{ionization}.png"
-    )  # , transparent=True, bbox_inches='tight')
+        f"figures/map_moll_{map_type}_{unmod}_{mod}_{ionization}.png",
+        transparent=False,
+        bbox_inches="tight",
+    )
     plt.close()
 
 

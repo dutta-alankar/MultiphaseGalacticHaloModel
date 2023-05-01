@@ -7,7 +7,6 @@ Created on Tue Sep  6 09:53:50 2022
 
 import sys
 import numpy as np
-import os
 from scipy.interpolate import interp1d
 from typing import Union, Callable, Optional, Any
 
@@ -15,7 +14,6 @@ sys.path.append("..")
 sys.path.append("../submodules/AstroPlasma")
 from pathlib import Path
 from astro_plasma import Ionization
-from misc.constants import mp, mH, kB, Xp
 from misc.template import modified_field
 from observable.ColumnDensity import ColumnDensity
 from astro_plasma.core.utils import AtmElement, parse_atomic_ion_no
