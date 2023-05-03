@@ -43,18 +43,31 @@ matplotlib.rcParams["legend.handlelength"] = 2
 # matplotlib.rcParams["figure.dpi"] = 200
 matplotlib.rcParams["axes.axisbelow"] = True
 
-element = "MgII"
-data = np.load(f"./figures/randomSight_e.{element}.npz")
-
-impact = data["impact"]
-col_dens = data["col_dens"]
-rCGM = data["rCGM"]
+all_ncl = [100, 1000, 10000]
+color = ["tab:red", "tab:blue", "tab:green"]
 
 plt.figure(figsize=(13, 10))
-for i in range(impact.shape[0]):
-    plt.scatter(
-        (impact[i] / 211) * np.ones(col_dens.shape[1]), col_dens[i, :], color="tab:blue"
-    )
+
+store = []
+for indx, ncl in enumerate(all_ncl[::-1]):
+    element = "MgII"
+    data = np.load(f"./figures/randomSight_e.{element}_{ncl}.npz")
+
+    impact = data["impact"]
+    col_dens = data["col_dens"]
+    col_dens_avg = np.average(col_dens, axis=1)
+    col_dens_med = np.median(col_dens, axis=1)
+    rCGM = data["rCGM"]
+    ncl = data["ncl"]
+
+    for i in range(impact.shape[0]):
+        plt.scatter(
+            (impact[i] / rCGM) * np.ones(col_dens.shape[1]),
+            col_dens[i, :],
+            color=color[indx],
+        )
+    store.append([impact / rCGM, col_dens_avg, col_dens_med])
+    plt.plot(impact / rCGM, col_dens_avg, color=color[indx])
 
 plt.xscale("log")
 plt.yscale("log")
@@ -64,5 +77,21 @@ plt.ylabel(r"Column density $[cm^{-2}]$", size=28)
 plt.tick_params(axis="both", which="major", length=12, width=3, labelsize=24)
 plt.tick_params(axis="both", which="minor", length=8, width=2, labelsize=22)
 plt.tight_layout()
-plt.savefig(f"./figures/randomSight_e.{element}.png")
+plt.savefig(f"./figures/randomSight_e.{element}_all.png")
 # plt.show()
+
+plt.figure(figsize=(13, 10))
+
+for indx, ncl in enumerate(all_ncl[::-1]):
+    plt.plot(store[indx][0], store[indx][1], linestyle="-", color=color[indx])
+    plt.plot(store[indx][0], store[indx][2], linestyle=":", color=color[indx])
+
+plt.xscale("log")
+plt.yscale("log")
+plt.xlabel(r"$b/R_{vir}$", size=28)
+plt.ylabel(r"Column density $[cm^{-2}]$", size=28)
+# leg = plt.legend(loc="upper right", ncol=3, fancybox=True, fontsize=24, framealpha=0.5)
+plt.tick_params(axis="both", which="major", length=12, width=3, labelsize=24)
+plt.tick_params(axis="both", which="minor", length=8, width=2, labelsize=22)
+plt.tight_layout()
+plt.savefig(f"./figures/randomSight_e.{element}_all_lines.png")
