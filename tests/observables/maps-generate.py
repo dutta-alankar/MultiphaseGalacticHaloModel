@@ -108,8 +108,8 @@ if __name__ == "__main__":
     mod = ["isochor", "isobar"]
     ionization = ["CIE", "PIE"]
 
-    b = np.linspace(-90, 90, 50)
-    l = np.linspace(0.0, 360, 51)
+    b = np.linspace(-90, 90, 256)
+    l = np.linspace(0.0, 360, 512)
 
     l, b = np.meshgrid(l, b)
 

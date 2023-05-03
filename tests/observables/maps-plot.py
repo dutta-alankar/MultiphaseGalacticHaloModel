@@ -15,10 +15,13 @@ import pickle
 def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     print(unmod, mod, ionization, map_type)
 
+    vmin = 0
     if map_type == "emission":
         cblabel = r"EM [$\times 10^{-3} \rm cm^{-6} pc$]"
+        vmax = 150
     else:
         cblabel = r"DM [$\rm cm^{-3} pc$]"
+        vmax = 170
 
     with open(
         f"figures/map_{map_type}_{unmod}_{mod}_{ionization}.pickle", "rb"
@@ -59,11 +62,14 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     )
     cbar = fig.colorbar(cs, pad=0.08)
     cbar.set_label(cblabel, rotation=270, labelpad=18, fontsize=18)
+    # cs.set_clim(vmin, vmax)
     fig.tight_layout()
     plt.grid(color="tab:grey", linestyle="--", linewidth=1.0)
     plt.savefig(
-        f"figures/map_{map_type}_{unmod}_{mod}_{ionization}.png"
-    )  # , transparent=True, bbox_inches='tight')
+        f"figures/map_{map_type}_{unmod}_{mod}_{ionization}.png",
+        transparent=False,
+        bbox_inches="tight",
+    )
     plt.close()
 
     l_mod = l - 360  # np.select([l<=180,l>180],[l,l+360])
@@ -92,6 +98,7 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
         location="top",
         format="%.1f",
     )
+    # cs.set_clim(vmin, vmax)
     cbar.ax.tick_params(labelsize=12, length=6, width=2)
     cbar.set_label(cblabel, rotation=0, labelpad=8, fontsize=18)
     fig.tight_layout()
