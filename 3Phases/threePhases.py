@@ -60,24 +60,40 @@ np.save(
     np.array([f_Vh, f_Vw, f_Vc, x_h, x_w, x_c, sig_h, sig_w, sig_c, T_u]),
 )
 
-del_h = 0.3
-del_w = 0.3
-del_c = 0.3
+# del_h = 0.1
+# del_w = 0.8
+# del_c = 3.0
 
-beta_h = (
-    del_h
-    * (x_h + sig_u**2 / 2 + del_h * sig_h**2 / 2)
-    / (x_h + sig_u**2 / 2 + sig_h**2 * (del_h - 0.5))
+# c_h = 0.1
+# c_w = 0.5
+# c_c = 50000.0
+
+# Working !
+# del_h = 1.2
+# del_w = 0.3
+# del_c = 3.0
+
+# c_h = 0.13
+# c_w = 0.2
+# c_c = 10.0**4.8
+
+del_h = 1.55523605
+del_w = 0.05
+del_c = 8.47981696
+
+c_h = 0.57866151
+c_w = 0.1296730
+c_c = 10.0**4.5
+
+
+beta_h = (np.log(c_h) + del_h * (x_h + sig_u**2 / 2 + del_h * sig_h**2 / 2)) / (
+    x_h + sig_u**2 / 2 + sig_h**2 * (del_h - 0.5)
 )
-beta_w = (
-    del_w
-    * (x_w + sig_u**2 / 2 + del_w * sig_w**2 / 2)
-    / (x_w + sig_w**2 / 2 + sig_w**2 * (del_w - 0.5))
+beta_w = (np.log(c_w) + del_w * (x_w + sig_u**2 / 2 + del_w * sig_w**2 / 2)) / (
+    x_w + sig_u**2 / 2 + sig_w**2 * (del_w - 0.5)
 )
-beta_c = (
-    del_c
-    * (x_c + sig_u**2 / 2 + del_c * sig_c**2 / 2)
-    / (x_c + sig_c**2 / 2 + sig_c**2 * (del_c - 0.5))
+beta_c = (np.log(c_c) + del_c * (x_c + sig_u**2 / 2 + del_c * sig_c**2 / 2)) / (
+    x_c + sig_u**2 / 2 + sig_c**2 * (del_c - 0.5)
 )
 
 # print ("beta_h, beta_w, beta_c = ", beta_h, beta_w, beta_c)
@@ -98,7 +114,6 @@ f_Mc = f_Mc / rho
 # print("volume fractions, hot, warm, cold:", f_Vh, f_Vw, f_Vc)
 # print("mass fractions, hot, warm, cold:", f_Mh, f_Mw, f_Mc)
 
-V_pdf_m = V_pdf
 rho_av_u = 1.0
 rho_av_h = rho_av_u * (T_h_M / T_u_M) ** (beta_h - 1)
 rho_av_w = rho_av_u * (T_w_M / T_u_M) ** (beta_w - 1)
@@ -107,25 +122,36 @@ rho_av = f_Vh * rho_av_h + f_Vw * rho_av_w + f_Vc * rho_av_c
 
 M_pdf_m = (
     f_Vh
+    * c_h
     * np.exp((del_h - 1) * (x_h + (del_h - 1) * sig_h**2 / 2 + sig_u**2 / 2))
     * N_pdf(x, x_h - (1 - del_h) * sig_h * sig_h, sig_h)
 )
 M_pdf_m += (
     f_Vw
+    * c_w
     * np.exp((del_w - 1) * (x_w + (del_w - 1) * sig_w**2 / 2 + sig_u**2 / 2))
     * N_pdf(x, x_w - (1 - del_w) * sig_w * sig_w, sig_w)
 )
 M_pdf_m += (
     f_Vc
+    * c_c
     * np.exp((del_c - 1) * (x_c + (del_c - 1) * sig_c**2 / 2 + sig_u**2 / 2))
     * N_pdf(x, x_c - (1 - del_c) * sig_c * sig_c, sig_c)
 )
 M_pdf_m *= rho_av_u / rho_av
+# M_pdf_m /= np.trapz(M_pdf_m,x)
+
+# alternative mass PDF
+M_pdf_alt = c_h * f_Vh * (T / T_u_M) ** (del_h - 1) * N_pdf(x, x_h, sig_h)
+M_pdf_alt += c_w * f_Vw * (T / T_u_M) ** (del_w - 1) * N_pdf(x, x_w, sig_w)
+M_pdf_alt += c_c * f_Vc * (T / T_u_M) ** (del_c - 1) * N_pdf(x, x_c, sig_c)
+M_pdf_alt *= rho_av_u / rho_av
 
 # using exact luminosity function
 hot_lum = (
     np.exp((del_h - 1) * sig_u**2)
     * f_Vh
+    * c_h**2
     * cooling_approx(np.exp(x) * T_u, metallicity)
     * np.exp(2 * (del_h - 1) * (x_h + (del_h - 1) * sig_h * sig_h))
     * N_pdf(x, x_h + 2 * (del_h - 1) * sig_h * sig_h, sig_h)
@@ -134,6 +160,7 @@ L_pdf_m = hot_lum
 warm_lum = (
     np.exp((del_w - 1) * sig_u**2)
     * f_Vw
+    * c_w**2
     * cooling_approx(np.exp(x) * T_u, metallicity)
     * np.exp(2 * (del_w - 1) * (x_w + (del_w - 1) * sig_w * sig_w))
     * N_pdf(x, x_w + 2 * (del_w - 1) * sig_w * sig_w, sig_w)
@@ -142,6 +169,7 @@ L_pdf_m += warm_lum
 cold_lum = (
     np.exp((del_c - 1) * sig_u**2)
     * f_Vc
+    * c_c**2
     * cooling_approx(np.exp(x) * T_u, metallicity)
     * np.exp(2 * (del_c - 1) * (x_c + (del_c - 1) * sig_c * sig_c))
     * N_pdf(x, x_c + 2 * (del_c - 1) * sig_c * sig_c, sig_c)

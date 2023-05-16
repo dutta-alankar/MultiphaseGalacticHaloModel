@@ -76,12 +76,15 @@ def spectrum(
     _ = list(map(lambda till: calc_SB(Emin, till, energy, luminosity, rCGM), Emax))
 
     ax = fig.gca()
-    unmod_label = "isothermal" if unmod == "isoth" else "isentropic"
-    mod_label = "isochoric" if mod == "isochor" else "isobaric"
+    unmod_label = (
+        r"$\gamma = 1$" if unmod == "isoth" else r"$\gamma = 5/3$"
+    ) + " polytrope"
+    mod_label = "(IC)" if mod == "isochor" else "(IB)"
     plotted_line = ax.loglog(
         energy,
         luminosity,
-        label=f"{unmod_label} profile with {mod_label} re-distribution ({ionization})",
+        color="teal" if unmod == "isoth" else "coral",
+        label=f"{unmod_label} {mod_label}",
     )
     return plotted_line[0]
 
@@ -92,7 +95,7 @@ if __name__ == "__main__":
     mod = ["isochor", "isobar"]
     ionization = ["PIE", "CIE"]
 
-    plt.gca().axvspan(0.3, 0.6, alpha=0.5, color="gray")
+    plt.gca().axvspan(0.3, 0.6, alpha=0.3, color="rebeccapurple")
     plt.gca().axvspan(0.3, 2.0, alpha=0.3, color="khaki")
 
     curves = []
@@ -107,6 +110,7 @@ if __name__ == "__main__":
     ):
         curves.append(spectrum(*condition, fig))
 
+    curves[-2].set_alpha(0.8)
     curves[-1].set_alpha(0.7)
     plt.ylim(ymin=1e30, ymax=1e46)
     plt.ylabel(r"Luminosity [$erg\ s^{-1}\ keV^{-1}$]", size=28, color="black")

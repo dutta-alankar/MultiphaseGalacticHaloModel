@@ -124,7 +124,7 @@ def log_probability(params, x_data, y_data, additional_data):
 
 if __name__ == "__main__":
     multitask = False
-    os.system("mkdir -p ./figures/")
+    os.makedirs("mkdir -p ./figures/", exist_ok=True)
 
     # See illustris-analysis/diff-emm-plot_data.py in https://github.com/dutta-alankar/cooling-flow-model.git
     tng50 = np.loadtxt("./Illustris-TNG50-1/tng50-pdf-data.txt")

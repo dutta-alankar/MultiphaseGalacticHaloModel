@@ -11,6 +11,7 @@ sys.path.append("..")
 sys.path.append("../..")
 sys.path.append("../../submodules/AstroPlasma")
 import numpy as np
+import copy
 import pickle
 from itertools import product
 from typing import Optional
@@ -33,6 +34,7 @@ def profile_gen(unmod: str, mod: str, ionization: str) -> None:
     radius = np.linspace(9.0, 250, 30)  # kpc
 
     unmodified: Optional[unmodified_field] = None
+    just_unmod: Optional[unmodified_field] = None
     if unmod == "isoth":
         TmedVH = 1.5e6
         THotM = TmedVH * np.exp(-(sig**2) / 2)
@@ -65,6 +67,7 @@ def profile_gen(unmod: str, mod: str, ionization: str) -> None:
             ionization=ionization,
         )
 
+    just_unmod = copy.deepcopy(unmodified)
     modified: Optional[modified_field] = None
     if mod == "isochor":
         modified = IsochorCoolRedistribution(unmodified, TmedVW, sig, cutoff)
@@ -82,6 +85,11 @@ def profile_gen(unmod: str, mod: str, ionization: str) -> None:
         prs_warm,
         _,
     ) = modified.ProfileGen(radius)
+
+    _ = just_unmod.ProfileGen(radius)
+    n_unmod = just_unmod.ndens
+    T_unmod = just_unmod.Temperature
+
     with open(f"figures/mod_prof_{unmod}_{mod}_{ionization}.pickle", "wb") as f:
         # print(unmodified.Halo.r200 * unmodified.Halo.UNIT_LENGTH / kpc)
         data = {
@@ -91,6 +99,8 @@ def profile_gen(unmod: str, mod: str, ionization: str) -> None:
             "nwarm_local": nwarm_local,
             "nhot_global": nhot_global,
             "nwarm_global": nwarm_global,
+            "n_unmod": n_unmod,
+            "T_unmod": T_unmod,
         }
         pickle.dump(data, f)
 

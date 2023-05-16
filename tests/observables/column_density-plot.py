@@ -47,10 +47,17 @@ plt.rcParams["font.size"] = 28
 matplotlib.rcParams["legend.handlelength"] = 2
 # matplotlib.rcParams["figure.dpi"] = 200
 matplotlib.rcParams["axes.axisbelow"] = True
+PvsC = True
 
 
 def plot_column_density(unmod, mod, ion, alpha=0.5):
-    states = ["PIE", "CIE"]
+    states = (
+        ["PIE", "CIE"]
+        if PvsC
+        else [
+            "PIE",
+        ]
+    )
 
     for ionization in states:
         with open(
@@ -88,15 +95,25 @@ def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
         label="isochor",
     )
     line_ib = matplotlib.lines.Line2D(
-        [0], [0], color="black", linestyle=":", linewidth=4.0, label="isobar"
+        [0],
+        [0],
+        color="black",
+        linestyle=":",
+        linewidth=4.0,
+        label="isobar",
     )
+    if PvsC:
+        type_pos = (0.06, 0.19) if obs_handles is not None else (0.06, 0.12)
+    else:
+        type_pos = (0.06, 0.12)
+
     legend_header = plt.legend(
         loc="lower left",
         prop={"size": 20},
         framealpha=0.3,
         shadow=False,
         fancybox=False,
-        bbox_to_anchor=(0.06, 0.17) if obs_handles is not None else (0.06, 0.12),
+        bbox_to_anchor=type_pos,
         ncol=2,
         fontsize=18,
         handles=[line_ic, line_ib],
@@ -134,13 +151,25 @@ def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
                 tuple(obs_handles[::-1]),
                 blue_patch,
                 (light_red_patch, light_blue_patch),
+            ]
+            if PvsC
+            else [
+                red_patch,
+                tuple(obs_handles[::-1]),
+                blue_patch,
             ],
             labels=[
-                "isothermal",
+                r"$\gamma = 1$",
                 "PIE",
                 obs_labels[0],
-                "isentropic",
+                r"$\gamma = 5/3$",
                 "CIE",
+            ]
+            if PvsC
+            else [
+                r"$\gamma = 1$",
+                obs_labels[0],
+                r"$\gamma = 5/3$",
             ],
             handler_map={
                 tuple: HandlerTuple(ndivide=None),
@@ -154,7 +183,7 @@ def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
             framealpha=0.3,
             shadow=False,
             fancybox=True,
-            bbox_to_anchor=(0.03, 0.01),
+            bbox_to_anchor=(0.08, 0.01) if PvsC else (0.08, 0.05),
             ncol=2,
             fontsize=18,
             handles=[
@@ -162,12 +191,22 @@ def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
                 (red_patch, blue_patch),
                 blue_patch,
                 (light_red_patch, light_blue_patch),
+            ]
+            if PvsC
+            else [
+                red_patch,
+                blue_patch,
             ],
             labels=[
-                "isothermal",
+                r"$\gamma = 1$",
                 "PIE",
-                "isentropic",
+                r"$\gamma = 5/3$",
                 "CIE",
+            ]
+            if PvsC
+            else [
+                r"$\gamma = 1$",
+                r"$\gamma = 5/3$",
             ],
             handler_map={
                 tuple: HandlerTuple(ndivide=None),
@@ -180,12 +219,13 @@ def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
     # help(legend.get_texts()[2].set_bbox)
 
     # legend.get_texts()[2].set_ha("center")
-    legend.get_texts()[2].update(
-        {
-            "ha": "right",
-            "position": (1.0, 0.5),
-        }
-    )
+    if PvsC:
+        legend.get_texts()[2].update(
+            {
+                "ha": "right",
+                "position": (1.0, 0.5),
+            }
+        )
     legend.get_frame().set_edgecolor("rebeccapurple")
     legend.get_frame().set_facecolor("ivory")
     legend.get_frame().set_linewidth(1.0)
@@ -197,7 +237,7 @@ def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
 if __name__ == "__main__":
     unmod = ["isoth", "isent"]
     mod = ["isochor", "isobar"]
-    element = "N V"  # "OVI"
+    element = "O VI"  # "OVI"
     alpha = 0.3
 
     plt.figure(figsize=(13, 10))

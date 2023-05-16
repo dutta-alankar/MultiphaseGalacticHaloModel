@@ -10,7 +10,8 @@ import sys
 sys.path.append("..")
 sys.path.append("../submodules/AstroPlasma")
 import numpy as np
-from typing import Union
+
+# from typing import Union
 from scipy.interpolate import interp1d
 from scipy.optimize import root
 from itertools import product
@@ -18,6 +19,9 @@ from misc.constants import kpc, kB, mH, mp, Xp
 from astro_plasma import Ionization
 from unmodified.isoth import IsothermalUnmodified
 import matplotlib.pyplot as plt
+
+# import pandas as pd
+# import joypy
 
 np.random.seed(10)
 
@@ -133,6 +137,7 @@ def intersect_clouds(all_clouds, cloud_size, los, rCGM):
             ) / np.linalg.norm(r2 - r1)
             if distance < cloud_size[cloud_type]:
                 nIon_cloud = cloud["nIon"]
+                # cloud properties
                 cloud_intersect.append(
                     [
                         cloud_type,
@@ -194,7 +199,7 @@ fvc = 1 - (fvh + fvw)
 
 # ----------- These are the free parameters -------------
 n_warm = int(0)
-n_cold = int(1e3)
+n_cold = int(1e4)
 
 r_warm = rCGM * (fvw / n_warm) ** (1.0 / 3) if n_warm > 0 else np.inf
 r_cold = rCGM * (fvc / n_cold) ** (1.0 / 3) if n_cold > 0 else np.inf
@@ -206,19 +211,34 @@ if n_cold > 0:
 
 
 def _populate_clouds(n_clouds, r_cloud):
-    pos_cloud: Union[list, np.ndarray] = [
-        np.random.uniform(r0 + r_cloud, rCGM - r_cloud, n_clouds),
-        np.random.uniform(0.0, np.pi, n_clouds),
-        np.random.uniform(0.0, 2 * np.pi, n_clouds),
-    ]
-    pos_cloud = np.array(
+    cloud_coordinates = np.random.uniform(-rCGM + r_cloud, rCGM - r_cloud, 3 * n_clouds)
+    cl_pos = np.array(
         [
-            pos_cloud[0] * np.sin(pos_cloud[1]) * np.cos(pos_cloud[2]),
-            pos_cloud[0] * np.sin(pos_cloud[1]) * np.sin(pos_cloud[2]),
-            pos_cloud[0] * np.cos(pos_cloud[1]),
+            cloud_coordinates[:n_clouds],
+            cloud_coordinates[n_clouds : 2 * n_clouds],
+            cloud_coordinates[2 * n_clouds :],
         ]
     ).T
-    return pos_cloud
+    distance = np.sqrt(np.sum(cl_pos**2, axis=1))
+    condition = np.logical_not(
+        np.logical_and(distance >= r0 + r_cloud, distance <= rCGM - r_cloud)
+    )
+    while np.count_nonzero(condition) != 0:
+        indx = np.where(condition)[0]
+        new_coords = np.random.uniform(-rCGM + r_cloud, rCGM - r_cloud, 3 * len(indx))
+        new_cl_pos = np.array(
+            [
+                new_coords[: len(indx)],
+                new_coords[len(indx) : 2 * len(indx)],
+                new_coords[2 * len(indx) :],
+            ]
+        ).T
+        cl_pos = np.vstack((np.delete(cl_pos, indx, axis=0), new_cl_pos))
+        distance = np.sqrt(np.sum(cl_pos**2, axis=1))
+        condition = np.logical_not(
+            np.logical_and(distance >= r0 + r_cloud, distance <= rCGM - r_cloud)
+        )
+    return cl_pos
 
 
 n_cloud = []
@@ -387,4 +407,51 @@ plt.grid()
 plt.xlabel("b/r200")
 plt.ylabel(r"Column Density [$cm^{-2}$]")
 plt.savefig(f"./figures/randomSight_e.{element}_w{n_warm}c{n_cold}.png")
+plt.close()
+
+intersect_count_med = np.zeros((len(n_cloud), impact.shape[0]))
+intersect_count_mean = np.zeros_like(intersect_count_med)
+intersect_count_max = np.zeros_like(intersect_count_med)
+
+for cloud_type in range(len(n_cloud)):
+    intersect_count_med[cloud_type, :] = np.median(
+        intersect_count[cloud_type, :, :], axis=1
+    )
+    intersect_count_mean[cloud_type, :] = np.average(
+        intersect_count[cloud_type, :, :], axis=1
+    )
+    intersect_count_max[cloud_type, :] = np.max(
+        intersect_count[cloud_type, :, :], axis=1
+    )
+
+plt.plot(
+    impact / rCGM,
+    intersect_count_med[0, :],
+    color="tab:red",
+    linestyle=":",
+    linewidth=3,
+)
+plt.plot(
+    impact / rCGM,
+    intersect_count_mean[0, :],
+    color="tab:red",
+    linestyle="-",
+    linewidth=3,
+)
+plt.plot(
+    impact / rCGM,
+    intersect_count_max[0, :],
+    color="tab:blue",
+    linestyle="-",
+    linewidth=3,
+)
+
+plt.xlim(xmin=r0 / rCGM)
+plt.xscale("log")
+plt.grid()
+plt.xlabel("b/r200")
+plt.ylabel(r"Intersecting cloud count")
+plt.savefig(f"./figures/randomSight_e.{element}_w{n_warm}c{n_cold}_count.png")
+
+
 # plt.show()

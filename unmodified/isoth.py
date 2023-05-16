@@ -123,6 +123,7 @@ class IsothermalUnmodified(UnmodifiedProfile):
             ]
         )
         rho = ndens * mu * mp  # Gas density only includes thermal component
+        self.Temperature = self.THot * np.ones_like(rho)
         self.rho = rho
         self.prsTh = prsTh
         self.prsnTh = prsnTh

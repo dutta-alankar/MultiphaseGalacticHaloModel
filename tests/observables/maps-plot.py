@@ -15,12 +15,22 @@ import pickle
 def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     print(unmod, mod, ionization, map_type)
 
-    vmin = 0
+    if unmod == "isoth":
+        title = r"$\gamma = 1$ polytrope"
+    else:
+        title = r"$\gamma = 5/3$ polytrope"
+    if mod == "isochor":
+        title += " (IC)"
+    else:
+        title += " (IB)"
+
     if map_type == "emission":
         cblabel = r"EM [$\times 10^{-3} \rm cm^{-6} pc$]"
+        vmin = 0
         vmax = 150
     else:
-        cblabel = r"DM [$\rm cm^{-3} pc$]"
+        cblabel = r"%sDM [$\rm cm^{-3} pc$]" % (title + "\n",)
+        vmin = 20
         vmax = 170
 
     with open(
@@ -59,12 +69,15 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
         (map_val + disk_val) * (1e3 if map_type == "emission" else 1.0),
         levels=levels,
         cmap="YlOrRd_r",
+        vmin=vmin,
+        vmax=vmax,
     )
     cbar = fig.colorbar(cs, pad=0.08)
     cbar.set_label(cblabel, rotation=270, labelpad=18, fontsize=18)
-    # cs.set_clim(vmin, vmax)
+    # cbar.mappable.set_clim(vmin, vmax)
     fig.tight_layout()
     plt.grid(color="tab:grey", linestyle="--", linewidth=1.0)
+    plt.title(title, size=20)
     plt.savefig(
         f"figures/map_{map_type}_{unmod}_{mod}_{ionization}.png",
         transparent=False,
@@ -78,15 +91,18 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     cs = ax.pcolormesh(
         np.deg2rad(l_mod),
         np.deg2rad(b),
-        (map_val + disk_val)
-        * (1e3 if map_type == "emission" else 1.0),  # in units of 1e-3 cm^-6 pc
+        (map_val + disk_val) * (1e3 if map_type == "emission" else 1.0),
         cmap="inferno",
+        vmin=vmin,
+        vmax=vmax,
     )  # , norm=colors.LogNorm())
     cs = ax.pcolormesh(
         np.deg2rad(-l_mod),
         np.deg2rad(b),
         (map_val + disk_val) * (1e3 if map_type == "emission" else 1.0),
         cmap="inferno",
+        vmin=vmin,
+        vmax=vmax,
     )  # , norm=colors.LogNorm())
     ax.grid(True)
     cbar = fig.colorbar(
@@ -101,6 +117,7 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     # cs.set_clim(vmin, vmax)
     cbar.ax.tick_params(labelsize=12, length=6, width=2)
     cbar.set_label(cblabel, rotation=0, labelpad=8, fontsize=18)
+    # cbar.mappable.set_clim(vmin, vmax)
     fig.tight_layout()
     plt.grid(color="tab:grey", linestyle="--", linewidth=1.0)
     plt.tick_params(axis="both", which="major", length=12, width=3, labelsize=12)
@@ -133,6 +150,8 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     # axes_labels = [r'$%d^{{\fontsize{50pt}{3em}\selectfont{}\circ}}$'%label for label in axes_labels]
     axes_labels = [r"$%d^{\circ}$" % label for label in axes_labels]
     ax.set_xticklabels(axes_labels)
+    # if map_type == "dispersion":
+    #     plt.title(title, size=20)
     plt.savefig(
         f"figures/map_moll_{map_type}_{unmod}_{mod}_{ionization}.png",
         transparent=False,

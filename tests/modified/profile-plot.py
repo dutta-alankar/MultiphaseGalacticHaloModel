@@ -53,6 +53,22 @@ def plot_profile(unmod, mod, ionization):
         nhot_global = profile["nhot_global"]
         nwarm_local = profile["nwarm_local"]
         nwarm_global = profile["nwarm_global"]
+        n_unmod = profile["n_unmod"]
+        T_unmod = profile["T_unmod"]
+
+        if unmod == "isoth":
+            plt.title(r"$\gamma = 1$ polytrope", size=20)
+        else:
+            plt.title(r"$\gamma = 5/3$ polytrope", size=20)
+
+        plt.loglog(
+            radius / r200,
+            n_unmod,
+            linestyle="-.",
+            color="rebeccapurple",
+            alpha=0.5,
+            linewidth=4,
+        )
 
         plt.loglog(
             radius / r200,
@@ -81,6 +97,25 @@ def plot_profile(unmod, mod, ionization):
             color="tab:blue",
             # linewidth=2,
         )
+        if unmod == "isent":
+            axin = plt.gca().inset_axes([0.3, 0.1, 0.3, 0.2])
+            axin.loglog(
+                radius / r200,
+                T_unmod,
+                color="rebeccapurple",
+                linestyle="-.",
+                linewidth=4,
+                alpha=0.8,
+            )
+            axin.tick_params(
+                axis="both", which="major", length=6, width=1.5, labelsize=12
+            )
+            axin.tick_params(
+                axis="both", which="minor", length=4, width=0.5, labelsize=10
+            )
+            axin.set_ylabel(r"Temperature [K]", size=13)
+            axin.set_xlabel(r"$r/r_{vir}$", size=13)
+            # axin.set_ylim(ymin=9e4)
 
 
 def make_legend(ax):
@@ -127,6 +162,35 @@ def make_legend(ax):
     legend.get_frame().set_edgecolor("rebeccapurple")
     legend.get_frame().set_facecolor("ivory")
     legend.get_frame().set_linewidth(1.0)
+    ax.add_artist(legend)
+
+    line_title = matplotlib.lines.Line2D(
+        [0],
+        [0],
+        color="rebeccapurple",
+        linestyle="-.",
+        linewidth=4.0,
+        label="",
+        alpha=0.5,
+    )
+    legend = plt.legend(
+        loc="upper right",
+        prop={"size": 20},
+        framealpha=0.0,
+        shadow=False,
+        fancybox=False,
+        bbox_to_anchor=(0.75, 1.072),
+        # ncol=2,
+        fontsize=18,
+        handles=[
+            line_title,
+        ],
+        # title="Modification type",
+        # title_fontsize=20,
+    )
+    legend.get_frame().set_edgecolor(None)
+    legend.get_frame().set_linewidth(0.0)
+    ax.add_artist(legend)
 
 
 plt.figure(figsize=(13, 10))
