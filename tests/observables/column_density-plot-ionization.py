@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Sat May  6 17:28:43 2023
@@ -49,9 +48,10 @@ matplotlib.rcParams["legend.handlelength"] = 2
 # matplotlib.rcParams["figure.dpi"] = 200
 matplotlib.rcParams["axes.axisbelow"] = True
 
+
 def plot_column_density(unmod, mod, ion, ax, colors):
     states = ["PIE", "CIE"]
-    
+
     for indx, ionization in enumerate(states):
         with open(
             f"figures/N_{ion}_{unmod}_{mod}_{ionization}.pickle", "rb"
@@ -67,17 +67,18 @@ def plot_column_density(unmod, mod, ion, ax, colors):
                 color=colors[indx],
             )
 
+
 if __name__ == "__main__":
     unmod = "isent"
     mod = "isochor"
     element = "N V"
-    
-    plt.figure(figsize=(13,10))
+
+    plt.figure(figsize=(13, 10))
     ax = plt.gca()
     colors = ["cadetblue", "gold"]
-    
+
     plot_column_density(unmod, mod, "".join(element.split()), ax, colors=colors)
-    
+
     observation = observedColDens()
 
     (
@@ -123,7 +124,7 @@ if __name__ == "__main__":
             markersize=10,
         )
     obs_handles, obs_labels = plt.gca().get_legend_handles_labels()
-    
+
     line_pie = matplotlib.lines.Line2D(
         [0],
         [0],
@@ -133,11 +134,11 @@ if __name__ == "__main__":
         label="PIE",
     )
     line_cie = matplotlib.lines.Line2D(
-        [0], 
-        [0], 
-        color=colors[1], 
-        linestyle="-", 
-        linewidth=4.0, 
+        [0],
+        [0],
+        color=colors[1],
+        linestyle="-",
+        linewidth=4.0,
         label="CIE",
     )
     legend = plt.legend(
@@ -148,7 +149,7 @@ if __name__ == "__main__":
         fancybox=True,
         bbox_to_anchor=(0.03, 0.01),
         fontsize=18,
-        ncol = 1,
+        ncol=1,
         handles=[
             line_pie,
             line_cie,
@@ -168,15 +169,17 @@ if __name__ == "__main__":
     legend.get_frame().set_facecolor("ivory")
     legend.get_frame().set_linewidth(1.0)
     ax.add_artist(legend)
-    
+
     plt.xlabel(r"Impact parameter [$r_{vir}$]", size=28)
     plt.ylabel(r"Column density of %s ($cm^{-2}$)" % element, size=28)
     plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
     plt.tick_params(axis="both", which="minor", length=6, width=1, labelsize=22)
     plt.xlim(xmin=0.05, xmax=1.1)
-    
-    plt.title(r"$\gamma = %s$ polytrope (%s)"%("1" if unmod=="isoth" else "5/3",
-                                     "IC" if mod=="isochor" else "IB"), size=28)
-    
-    plt.savefig(f"figures/column_density_{element}_PIEvsCIE.png", transparent=False)       
-        
+
+    plt.title(
+        r"$\gamma = %s$ polytrope (%s)"
+        % ("1" if unmod == "isoth" else "5/3", "IC" if mod == "isochor" else "IB"),
+        size=28,
+    )
+
+    plt.savefig(f"figures/column_density_{element}_PIEvsCIE.png", transparent=False)
