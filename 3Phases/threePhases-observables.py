@@ -35,7 +35,7 @@ metallicity = (
 )
 redshift = 0.2
 
-M200 = 1e13  # MSun
+M200 = 1e12  # MSun
 halo = HaloModel(M200=M200)
 rCGM = 1.1 * halo.r200 * (halo.UNIT_LENGTH / kpc)  # kpc
 r200 = halo.r200 * (halo.UNIT_LENGTH / kpc)  # kpc
