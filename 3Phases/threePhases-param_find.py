@@ -76,14 +76,32 @@ def log_prior(params, additional_data):
     x_h = additional_data["Th_expect"]  # in log10
     x_w = additional_data["Tw_expect"]  # in log10
     x_c = additional_data["Tc_expect"]  # in log10
-
+    
     lp = np.sum(
         lnnormal(params[0], x_h, 0.2)
         + lnnormal(params[1], x_w, 0.6)
         + lnnormal(params[2], x_c, 0.007)
+        + lnnormal(params[3], 0.9, 0.07)
+        + lnnormal(params[4], 0.06, 0.01)
+        + lnnormal(params[5], 0.5, 0.07)
+        + lnnormal(params[6], 1.0, 0.07)
         + lnnormal(params[7], 0.3, 0.01)
     )
+    '''
+    lp = np.sum(
+        lnnormal(params[0], x_h, params[5])
+        + lnnormal(params[1], x_w, params[6])
+        + lnnormal(params[2], x_c, params[7])
+    )
+    
+    f_Vh = 0.960
+    f_Vw = 0.04
+    f_Vc = 1 - (f_Vh + f_Vw)
 
+    sig_h = 0.504
+    sig_w = 1.1
+    sig_c = 0.31
+    '''
     # Constrains not needed are commented out because they maybe useful for other set of parameters
 
     # T_u = 10.**params[0]
@@ -166,13 +184,14 @@ if __name__ == "__main__":
         "Tw_expect": T_w,
         "Tc_expect": T_c,
     }
-    random_factor = 1.0e-3
+    random_factor = 1.0e-4
 
     params = np.array([T_h, T_w, T_c, f_Vh, f_Vw, sig_h, sig_w, sig_c])
 
     np.random.seed(int(time.time()))
     nll = lambda *args: -log_likelihood(*args)
-    initial = params + random_factor * params * np.random.randn(params.shape[0])
+    #initial = params + random_factor * params * np.random.randn(params.shape[0])
+    initial = params + random_factor * np.random.randn(params.shape[0])
     cons = ({"type": "ineq", "fun": lambda x: 1.0 - x[3] - x[4]},)
     bnds = (
         (5.4, 6.8),
@@ -211,7 +230,8 @@ if __name__ == "__main__":
     nwalkers = 32
     ndim = params.shape[0]
 
-    pos = params + random_factor * params * np.random.randn(nwalkers, ndim)
+    #pos = params + random_factor * params * np.random.randn(nwalkers, ndim)
+    pos = params + random_factor* np.random.randn(nwalkers, ndim)
     steps = 100000
 
     if multitask:
@@ -256,7 +276,7 @@ if __name__ == "__main__":
     axes[-1].set_xlabel("step number", size=18)
     plt.tight_layout()
     plt.savefig("./figures/emcee-walkers.png", transparent=False)
-    # plt.show()
+    plt.show()
 
     tau = sampler.get_autocorr_time()
     # print(tau)
@@ -277,7 +297,7 @@ if __name__ == "__main__":
     fig = corner.corner(
         flat_samples,
         labels=labels,
-        quantiles=[0.16, 0.5, 0.84],
+        quantiles=[0.50, 0.70, 0.90],
         show_titles=True,
         title_kwargs={"fontsize": 16},
         label_kwargs={"fontsize": 16},
@@ -286,5 +306,5 @@ if __name__ == "__main__":
     )
     plt.tight_layout()
     plt.savefig("./figures/emcee-params.png", transparent=False)
-    # plt.show()
+    #plt.show()
     print("Initial guess: ", params)
