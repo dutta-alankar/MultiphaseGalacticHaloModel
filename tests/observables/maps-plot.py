@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.transforms
 from matplotlib import gridspec
+from matplotlib import colors
 from itertools import product
 import pickle
 
@@ -26,12 +27,12 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
 
     if map_type == "emission":
         cblabel = r"EM [$\times 10^{-3} \rm cm^{-6} pc$]"
-        vmin = 0
-        vmax = 150
+        vmin = 1
+        vmax = 130
     else:
         cblabel = r"%sDM [$\rm cm^{-3} pc$]" % (title + "\n",)
-        vmin = 20
-        vmax = 170
+        vmin = 1
+        vmax = 150
 
     with open(
         f"figures/map_{map_type}_{unmod}_{mod}_{ionization}.pickle", "rb"
@@ -44,31 +45,31 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
         disk_val = data["disk"]
 
     l_plot = np.deg2rad(np.arange(0, 360, 45))
-    b_plot = np.deg2rad(np.arange(-90, -25, 30))
+    b_plot = np.deg2rad(np.arange(-90, 90, 30))
 
     # Make plot
-    levels = 100
+    levels = 200
 
     fig = plt.figure(figsize=(20, 20))
     gs = gridspec.GridSpec(1, 1)
     # Position plot in figure using gridspec.
     ax = plt.subplot(gs[0], polar=True)
-    ax.set_ylim(np.deg2rad(-90), np.deg2rad(-25))
+    ax.set_ylim(np.deg2rad(-90), np.deg2rad(90))
 
     # Set x,y ticks
-    plt.xticks(l_plot)  # , fontsize=8)
-    plt.yticks(b_plot)  # , fontsize=8)
+    plt.xticks(l_plot , fontsize=18)
+    plt.yticks(b_plot , fontsize=18)
     ax.set_rlabel_position(18)
     # ax.set_xticklabels(['$22^h$', '$23^h$', '$0^h$', '$1^h$', '$2^h$', '$3^h$',
     #     '$4^h$', '$5^h$', '$6^h$', '$7^h$', '$8^h$'], fontsize=10)
-    ax.set_yticklabels(["", "$-60^{\circ}$", "$-30^{\circ}$"])  # , fontsize=10)
+    ax.set_yticklabels(["", "$-60^{\circ}$", "$-30^{\circ}$","$0^{\circ}$","$30^{\circ}$","$60^{\circ}$"]   , fontsize=18)
     ax.set_theta_zero_location("S")
     cs = ax.contourf(
         np.deg2rad(l),
         np.deg2rad(b),
         (map_val + disk_val) * (1e3 if map_type == "emission" else 1.0),
         levels=levels,
-        cmap="YlOrRd_r",
+        cmap="nipy_spectral_r",
         vmin=vmin,
         vmax=vmax,
     )
@@ -78,6 +79,9 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     fig.tight_layout()
     plt.grid(color="tab:grey", linestyle="--", linewidth=1.0)
     plt.title(title, size=20)
+    
+    #plt.show()
+    
     plt.savefig(
         f"figures/map_{map_type}_{unmod}_{mod}_{ionization}.png",
         transparent=False,
@@ -92,18 +96,18 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
         np.deg2rad(l_mod),
         np.deg2rad(b),
         (map_val + disk_val) * (1e3 if map_type == "emission" else 1.0),
-        cmap="inferno",
+        cmap="nipy_spectral_r",
         vmin=vmin,
         vmax=vmax,
-    )  # , norm=colors.LogNorm())
+        norm=colors.LogNorm())
     cs = ax.pcolormesh(
         np.deg2rad(-l_mod),
         np.deg2rad(b),
         (map_val + disk_val) * (1e3 if map_type == "emission" else 1.0),
-        cmap="inferno",
+        cmap="nipy_spectral_r",
         vmin=vmin,
         vmax=vmax,
-    )  # , norm=colors.LogNorm())
+        norm=colors.LogNorm())
     ax.grid(True)
     cbar = fig.colorbar(
         cs,
@@ -122,7 +126,7 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     plt.grid(color="tab:grey", linestyle="--", linewidth=1.0)
     plt.tick_params(axis="both", which="major", length=12, width=3, labelsize=12)
     plt.tick_params(axis="both", which="minor", length=8, width=2, labelsize=10)
-    ax.tick_params(axis="x", colors="white")
+    ax.tick_params(axis="x", colors="black")
 
     plt.setp(ax.xaxis.get_majorticklabels())
     # Create offset transform by 5 points in x direction
@@ -152,6 +156,9 @@ def plot_map(unmod: str, mod: str, ionization: str, map_type: str) -> None:
     ax.set_xticklabels(axes_labels)
     # if map_type == "dispersion":
     #     plt.title(title, size=20)
+    
+    #plt.show()
+    
     plt.savefig(
         f"figures/map_moll_{map_type}_{unmod}_{mod}_{ionization}.png",
         transparent=False,

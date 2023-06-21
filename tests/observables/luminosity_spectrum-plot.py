@@ -71,9 +71,20 @@ def spectrum(
         luminosity = np.array(data["luminosity"])
         rCGM = data["rCGM"]
 
+    if (unmod == 'isoth' and mod == 'isochor'):   
+         colour = 'teal'
+    elif (unmod == 'isoth' and mod == 'isobar'):   
+         colour = 'palegreen'
+    elif (unmod == 'isent' and mod == 'isochor'):   
+         colour = 'silver'
+    elif (unmod == 'isent' and mod == 'isobar'):   
+         colour = 'gold'               
+    else :     
+         print('error')
+
     Emin = 0.3  # keV
     Emax = [0.6, 2.0]  # keV
-    _ = list(map(lambda till: calc_SB(Emin, till, energy, luminosity, rCGM), Emax))
+    #_ = list(map(lambda till: calc_SB(Emin, till, energy, luminosity, rCGM), Emax))
 
     ax = fig.gca()
     unmod_label = (
@@ -83,7 +94,7 @@ def spectrum(
     plotted_line = ax.loglog(
         energy,
         luminosity,
-        color="teal" if unmod == "isoth" else "coral",
+        color= colour,
         label=f"{unmod_label} {mod_label}",
     )
     return plotted_line[0]
@@ -101,9 +112,9 @@ if __name__ == "__main__":
     curves = []
     for condition in product(
         unmod,
-        [
-            mod[0],
-        ],
+        
+            mod,
+        
         [
             ionization[0],
         ],
@@ -112,8 +123,8 @@ if __name__ == "__main__":
 
     curves[-2].set_alpha(0.8)
     curves[-1].set_alpha(0.7)
-    plt.ylim(ymin=1e30, ymax=1e46)
-    plt.ylabel(r"Luminosity [$erg\ s^{-1}\ keV^{-1}$]", size=28, color="black")
+    plt.ylim(ymin=1e-14, ymax=1e-4)
+    plt.ylabel(r"Surface Brightness [$erg\ s^{-1}\ cm^{-2}\ sr^{-1}\ keV^{-1}$]", size=28, color="black")
     plt.xlabel(r"E [keV]", size=28, color="black")
     plt.xlim(xmin=5e-3, xmax=1.2e1)
     plt.legend(
@@ -121,8 +132,14 @@ if __name__ == "__main__":
     )
     plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
     plt.tick_params(axis="both", which="minor", length=6, width=1, labelsize=22)
+    '''
     plt.savefig(
         f"figures/spectrum_{unmod[0]}+{unmod[1]}_{mod[0]}_{ionization[0]}.png",
         transparent=False,
     )
-    # plt.show()
+    '''
+    plt.savefig(
+        f"figures/SB_r.png",
+        transparent=False,
+    )
+    plt.show()

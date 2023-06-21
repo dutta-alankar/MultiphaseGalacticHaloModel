@@ -39,7 +39,7 @@ matplotlib.rcParams["legend.handlelength"] = 2
 matplotlib.rcParams["figure.dpi"] = 200
 matplotlib.rcParams["axes.axisbelow"] = True
 
-halo_id = int(sys.argv[1])
+halo_id = 110#int(sys.argv[1])
 try:
     file = h5py.File(f"halo-prop_ID={halo_id}.hdf5", "r")
 except FileNotFoundError:
@@ -48,7 +48,7 @@ except FileNotFoundError:
 
 vol_pdf, bin_edges = np.histogram(
     np.log10(file["/Temperature"]),
-    bins=300,
+    bins=200,
     density=True,
     weights=np.array(file["/Volume"]),
 )
@@ -58,16 +58,16 @@ plt.semilogy(centers, vol_pdf, label="volume")
 
 mass_pdf, bin_edges = np.histogram(
     np.log10(file["/Temperature"]),
-    bins=300,
+    bins=200,
     density=True,
-    weights=np.array(file["/NumberDensity"]) * np.array(file["/Volume"]),
+    weights=np.array(file["/Density"]) * np.array(file["/Volume"]),
 )
 centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
 plt.semilogy(centers, mass_pdf, label="mass")
 
 emm_pdf, bin_edges = np.histogram(
     np.log10(file["/Temperature"]),
-    bins=300,
+    bins=200,
     density=True,
     weights=-np.array(file["/nH"]) ** 2
     * np.array(file["/Lambda"])
@@ -82,7 +82,7 @@ plt.xlim(xmin=3.9, xmax=7.6)
 plt.xlabel(r"Temperature [$K$]")
 plt.ylabel(r"$T \mathscr{P}(T)$")
 os.system("mkdir -p ./figures")
-plt.savefig(f"./figures/halo-fill_ID={sys.argv[1]}.png", transparent=False)
+plt.savefig(f"./figures/halo-fill_ID={halo_id}.png", transparent=False)
 # plt.show()
 
 np.savetxt(

@@ -95,12 +95,10 @@ class Measure(maps.MapInit, _interpolate_internal_variables, ABC):
                     self.Temp.shape
                 )
 
-            hotInt = (1 - self.fvw(r_val)) * np.trapz(
-                np.product(quanHot, axis=0) * gvh, xh
-            )
+            hotInt =  np.trapz(np.product(quanHot, axis=0) * gvh, xh) #*(1 - self.fvw(r_val)) 
             # global density sensitive, extra filling factor for global
 
-            warmInt = self.fvw(r_val) * np.trapz(np.product(quanWarm, axis=0) * gvw, xw)
+            warmInt =  np.trapz(np.product(quanWarm, axis=0) * gvw, xw) #*self.fvw(r_val) 
 
             return hotInt + warmInt
 

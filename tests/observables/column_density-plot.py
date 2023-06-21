@@ -47,7 +47,7 @@ plt.rcParams["font.size"] = 28
 matplotlib.rcParams["legend.handlelength"] = 2
 # matplotlib.rcParams["figure.dpi"] = 200
 matplotlib.rcParams["axes.axisbelow"] = True
-PvsC = True
+PvsC = False
 
 
 def plot_column_density(unmod, mod, ion, alpha=0.5):
@@ -237,7 +237,7 @@ def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
 if __name__ == "__main__":
     unmod = ["isoth", "isent"]
     mod = ["isochor", "isobar"]
-    element = "O VI"  # "OVI"
+    element = "N V"  # "OVI"
     alpha = 0.3
 
     plt.figure(figsize=(13, 10))

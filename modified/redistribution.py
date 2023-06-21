@@ -41,7 +41,7 @@ class Redistribution(ABC):
     unmodified: unmodified_field
     TmedVW: float = 3.0e5
     sig: float = 0.3  # spread of unmodified temperature redistribution
-    cutoff: float = 4.0
+    cutoff: float = 6.0
     isobaric: Optional[int] = None
     redisType: Optional[str] = None
     _plot_xval: Optional[np.ndarray] = None

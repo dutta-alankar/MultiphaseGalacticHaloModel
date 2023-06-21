@@ -11,7 +11,7 @@ import h5py
 import io
 
 baseUrl = "http://www.tng-project.org/api/"
-headers = {"api-key": "fdabde978faf72095f9b0ca4f4a54a18"}
+headers = {"api-key": "a85c9b695968416dfacd26146061f7d4"}
 
 
 def get(path, params=None):
@@ -84,6 +84,7 @@ with h5py.File(io.BytesIO(cutout.content), "r") as hdf:
         / (kB * Temperature)
     )
     Volume = Masses * (UnitMass / h) / (Density * UnitDensity)
+    Density *= UnitDensity
 
 with h5py.File(f"halo-prop_ID={haloID}.hdf5", "w") as store:
     store.create_dataset("Redshift", data=redshift)
