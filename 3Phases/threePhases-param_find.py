@@ -67,73 +67,45 @@ def log_likelihood(
     lsq = -0.5 * np.sum((y_data - model) ** 2)
     return lsq
 
+params_limit =  [(5.4, 6.4), # T_h
+                 (5.0, 6.0),  # T_w
+                 (4.0, 4.5),  # T_c
+                 (0.8, 1.0),  # fv_h
+                 (0.001, 0.3),  # fv_w
+                 (0.1, 2.0), # sig_h
+                 (0.1, 4.0), # sig_w
+                 (0.001, 1.0)] # sig_c
 
-def log_prior(params, additional_data):
+params_prior = [(6.1, 1.0), # T_h
+                 (5.5, 0.1),  # T_w
+                 (4.2, 0.1),  # T_c
+                 (0.9, 0.1),  # fv_h
+                 (0.1, 0.05),  # fv_w
+                 (0.8, 0.1),  # sig_h
+                 (2.0, 0.5),  # sig_w
+                 (0.2, 0.05)] # sig_c
+
+def log_prior(params):
     lnnormal = lambda x, mu, sig: -(
         np.log(np.sqrt(2 * np.pi) * sig) + ((x - mu) / (np.sqrt(2) * sig)) ** 2
     )
 
-    x_h = additional_data["Th_expect"]  # in log10
-    x_w = additional_data["Tw_expect"]  # in log10
-    x_c = additional_data["Tc_expect"]  # in log10
-    
     lp = np.sum(
-        lnnormal(params[0], x_h, 0.2)
-        + lnnormal(params[1], x_w, 0.6)
-        + lnnormal(params[2], x_c, 0.007)
-        + lnnormal(params[3], 0.9, 0.07)
-        + lnnormal(params[4], 0.06, 0.01)
-        + lnnormal(params[5], 0.5, 0.07)
-        + lnnormal(params[6], 1.0, 0.07)
-        + lnnormal(params[7], 0.3, 0.01)
+          [lnnormal(params[i], params_prior[i][0], params_prior[i][1]) for i in range(len(params_prior))]
     )
-    '''
-    lp = np.sum(
-        lnnormal(params[0], x_h, params[5])
-        + lnnormal(params[1], x_w, params[6])
-        + lnnormal(params[2], x_c, params[7])
-    )
+
+    condition = params_limit[0][0] < params[0] < params_limit[0][1]
+    for i in range(1, len(params_limit)):
+        condition = condition and (params_limit[i][0] < params[i] < params_limit[i][1])
     
-    f_Vh = 0.960
-    f_Vw = 0.04
-    f_Vc = 1 - (f_Vh + f_Vw)
-
-    sig_h = 0.504
-    sig_w = 1.1
-    sig_c = 0.31
-    '''
-    # Constrains not needed are commented out because they maybe useful for other set of parameters
-
-    # T_u = 10.**params[0]
-    # T_h = T_u
-    # T_w = 10.**params[1]
-    # T_c = 10.**params[2]
-
-    f_Vh = params[3]
-    f_Vw = params[4]
-    # f_Vc = 1 - (f_Vh+f_Vw)
-
-    sig_h = params[5]
-    sig_w = params[6]
-    sig_c = params[7]
-
-    condition = 0.90 < f_Vh < 0.98
-    condition = condition and (0.01 < f_Vw < (1.0 - f_Vh))
-    # condition = condition and (5.8 <= np.log10(T_u) <= 6.8)
-    # condition = condition and (4.9 <= np.log10(T_w) <= 5.6)
-    # condition = condition and (4.0 <= np.log10(T_c) <= 5.4)
-    condition = condition and (0.2 <= sig_h <= 0.9)
-    condition = condition and (0.4 <= sig_w <= 1.8)
-    condition = condition and (0.2 <= sig_c <= 0.5)
-
     if condition:
         return lp
     else:
         return -np.inf
 
 
-def log_probability(params, x_data, y_data, additional_data):
-    lp = log_prior(params, additional_data)
+def log_probability(params, x_data, y_data):
+    lp = log_prior(params)
     ll = log_likelihood(params, x_data, y_data)
     if not (np.isfinite(lp)) or np.sum(np.isnan(ll)) > 0:
         return -np.inf
@@ -165,25 +137,20 @@ if __name__ == "__main__":
 
     # Initial guess
     sig_u = 0.52
-    T_u = 5.75
+    T_u = 6.0
 
-    f_Vh = 0.960
-    f_Vw = 0.04
+    f_Vh = 0.9
+    f_Vw = 0.08
     f_Vc = 1 - (f_Vh + f_Vw)
 
-    sig_h = 0.504
-    sig_w = 1.1
-    sig_c = 0.31
+    sig_h = 0.9
+    sig_w = 2.0
+    sig_c = 0.5
 
     T_h = T_u
-    T_w = 4.92
-    T_c = 4.101
+    T_w = 5.5
+    T_c = 4.2
 
-    additional_data = {
-        "Th_expect": T_h,
-        "Tw_expect": T_w,
-        "Tc_expect": T_c,
-    }
     random_factor = 1.0e-4
 
     params = np.array([T_h, T_w, T_c, f_Vh, f_Vw, sig_h, sig_w, sig_c])
@@ -193,16 +160,7 @@ if __name__ == "__main__":
     #initial = params + random_factor * params * np.random.randn(params.shape[0])
     initial = params + random_factor * np.random.randn(params.shape[0])
     cons = ({"type": "ineq", "fun": lambda x: 1.0 - x[3] - x[4]},)
-    bnds = (
-        (5.4, 6.8),
-        (4.2, 5.4),
-        (4.0, 4.2),
-        (0.5, 1.0),
-        (0, 0.5),
-        (0.1, 2.0),
-        (0.5, 4.0),
-        (0.05, 2.0),
-    )
+    bnds = params_limit
     soln = minimize(
         nll,
         initial,
@@ -250,7 +208,7 @@ if __name__ == "__main__":
         nwalkers,
         ndim,
         log_probability,
-        args=(Temperature_data, V_pdf_data, additional_data),
+        args=(Temperature_data, V_pdf_data),
     )
     sampler.run_mcmc(pos, steps, progress=True)
 
@@ -297,7 +255,7 @@ if __name__ == "__main__":
     fig = corner.corner(
         flat_samples,
         labels=labels,
-        quantiles=[0.50, 0.70, 0.90],
+        quantiles=[0.10, 0.50, 0.90],
         show_titles=True,
         title_kwargs={"fontsize": 16},
         label_kwargs={"fontsize": 16},
@@ -306,5 +264,5 @@ if __name__ == "__main__":
     )
     plt.tight_layout()
     plt.savefig("./figures/emcee-params.png", transparent=False)
-    #plt.show()
+    plt.show()
     print("Initial guess: ", params)

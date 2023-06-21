@@ -173,19 +173,19 @@ def log_likelihood(
                   np.sum((y_data[1,:] - model[1]) ** 2) )
     return lsq
 
-params_limit =  [(0.05, 5.0), # del h
-                 (0.01, 3.0),  # del w
-                 (0.1, 9.0),  # del c
-                 (-7.0, -0.01),  # C h
-                 (-7.0, -0.01),  # C w
-                 (3.0, 18.0)] # C c
+params_limit =  [(0.01, 7.0), # del h
+                 (0.001, 4.0),  # del w
+                 (0.01, 12.0),  # del c
+                 (-9.0, -0.001),  # C h
+                 (-9.0, -0.001),  # C w
+                 (1.0, 20.0)] # C c
 
-params_prior = [(1.2, 0.01), # del h
-                 (0.3, 0.01),  # del w
-                 (3.0, 0.01),  # del c
-                 (-1.13, 0.01),  # C h
-                 (-1.2, 0.01),  # C w
-                 (11.8, 0.01)] # C c
+params_prior = [(1.209, 0.1), # del h
+                 (0.297, 0.1),  # del w
+                 (3.064, 0.1),  # del c
+                 (-1.113, 0.1),  # C h
+                 (-1.197, 0.1),  # C w
+                 (11.780, 0.1)] # C c
 
 def log_prior(params):
     lnnormal = lambda x, mu, sig: -(
@@ -251,13 +251,13 @@ if __name__ == "__main__":
         pdf_data[i,:] = pdf[clip]
 
     # Initial guess
-    del_h = 1.2
-    del_w = 0.3
-    del_c = 3.0
+    del_h = 1.209
+    del_w = 0.297
+    del_c = 3.064
 
-    c_h = -1.13
-    c_w = -1.2
-    c_c = 11.8
+    c_h = -1.113
+    c_w = -1.197
+    c_c = 11.780
     
     random_factor = 1.0e-4
 
@@ -311,7 +311,7 @@ if __name__ == "__main__":
     ndim = params.shape[0]
 
     pos = params + random_factor * np.random.randn(nwalkers, ndim)
-    steps = 10000
+    steps = 1000
 
     if multitask:
         sampler = None
@@ -383,5 +383,5 @@ if __name__ == "__main__":
     )
     plt.tight_layout()
     plt.savefig("./figures/emcee-params-mass_lum.png", transparent=False)
-    #plt.show()
+    plt.show()
     print("Initial guess: ", params)

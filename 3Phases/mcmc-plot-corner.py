@@ -28,7 +28,7 @@ labels = [
 fig = corner.corner(
     flat_samples,
     labels=labels,
-    quantiles=[0.50, 0.70, 0.90],
+    quantiles=[0.10, 0.50, 0.90],
     show_titles=True,
     title_kwargs={"fontsize": 16},
     label_kwargs={"fontsize": 16},
@@ -37,4 +37,4 @@ fig = corner.corner(
 )
 plt.tight_layout()
 plt.savefig("./figures/emcee-params.png", transparent=False)
-#plt.show()
+plt.show()

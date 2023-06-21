@@ -49,9 +49,9 @@ Temperature = np.logspace(3.8, 6.8, 50)
 x = np.log(Temperature / T_u)
 
 V_pdf_fv = (
-    f_Vh**2 * N_pdf(x, x_h, sig_h)
-    + f_Vw**2 * N_pdf(x, x_w, sig_w)
-    + f_Vc**2 * N_pdf(x, x_c, sig_c)
+    f_Vh * N_pdf(x, x_h, sig_h)
+    + f_Vw * N_pdf(x, x_w, sig_w)
+    + f_Vc * N_pdf(x, x_c, sig_c)
 )
 # This volume fraction square is because global quantities come up calculation of column density
 # On the other hand, P = n kB T , is where n is local
@@ -211,7 +211,7 @@ def IonColumn(element, ylim=None, fignum=None, color=None):
             "./figures/observations/N_%s-3p.png" % ("".join(element.split()),),
             transparent=False,
         )
-        # plt.show()
+        plt.show()
         plt.close()
 
 
@@ -236,7 +236,7 @@ plt.tight_layout()
 # for legobj in leg.legendHandles:
 # leg.set_title("Column density predicted by three phase model",prop={'size':20})
 plt.savefig("./figures/observations/DM-3p.png", transparent=False)
-# plt.show()
+plt.show()
 plt.close()
 
 # EM
@@ -257,7 +257,7 @@ plt.tight_layout()
 # for legobj in leg.legendHandles:
 # leg.set_title("Column density predicted by three phase model",prop={'size':20})
 plt.savefig("./figures/observations/EM-3p.png", transparent=False)
-# plt.show()
+plt.show()
 plt.close()
 
 # ---------- Individual Ions -------------------------
@@ -297,5 +297,5 @@ leg = plt.legend(loc="upper right", ncol=2, fancybox=True, fontsize=25)
 plt.ylim(2e10, 2e16)
 plt.grid()
 plt.savefig("./figures/observations/N_OVI+MgII-3p.png", transparent=False)
-# plt.show()
+plt.show()
 # plt.close()

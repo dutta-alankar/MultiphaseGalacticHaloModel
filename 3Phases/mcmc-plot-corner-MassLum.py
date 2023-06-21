@@ -37,4 +37,4 @@ fig = corner.corner(
 )
 plt.tight_layout()
 plt.savefig("./figures/emcee-params-mass_lum.png", transparent=False)
-#plt.show()
+plt.show()
