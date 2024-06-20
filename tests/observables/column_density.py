@@ -25,7 +25,7 @@ from misc.template import unmodified_field, modified_field
 def profile_gen(unmod: str, mod: str, ionization: str) -> None:
     print(unmod, mod, ionization)
 
-    cutoff = 6.0
+    cutoff = 4.0  ####Mukesh
     TmedVW = 3.0e5
     sig = 0.3
     redshift = 0.2
