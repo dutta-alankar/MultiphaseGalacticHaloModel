@@ -20,6 +20,7 @@ from modified.isobarcool import IsobarCoolRedistribution
 from modified.isochorcool import IsochorCoolRedistribution
 from misc.template import unmodified_field
 
+plt.style.use('dark_background')
 ## Plot Styling
 matplotlib.rcParams["xtick.direction"] = "in"
 matplotlib.rcParams["ytick.direction"] = "in"
@@ -50,7 +51,7 @@ radius = 20.0  # kpc
 TmedVW = 3.0e5
 sig = 0.3
 cutoff = 4.0
-redshift = 0.2
+redshift = 0.0
 
 
 def gen_PDF(unmod: str, ionization: str) -> None:
@@ -119,13 +120,13 @@ def gen_PDF(unmod: str, ionization: str) -> None:
         fancybox=True,
         bbox_to_anchor=(1.1, 1),
     )
-    plt.savefig(f"figures/{unmod}_modified_PDF_{ionization}.png", transparent=False)
+    plt.savefig(f"figures/{unmod}_modified_PDF_{ionization}.png", transparent=True)
     # plt.show()
 
 
 if __name__ == "__main__":
-    unmod = ["isoth", "isent"]
-    ionization = ["PIE", "CIE"]
+    unmod = ["isoth",]#, "isent"]
+    ionization = ["PIE",] # "CIE"]
 
     for condition in product(unmod, ionization):
         gen_PDF(*condition)

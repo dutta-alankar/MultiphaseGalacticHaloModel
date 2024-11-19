@@ -22,16 +22,34 @@ from modified.isobarcool import IsobarCoolRedistribution
 from modified.isochorcool import IsochorCoolRedistribution
 from misc.template import unmodified_field, modified_field
 
+_mpi = True
+
+if _mpi:
+    from mpi4py import MPI
+
+    ## start parallel programming ---------------------------------------- #
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+
+    comm.Barrier()
+    # t_start = MPI.Wtime()
+else:
+    rank = 0
+    size = 1
+
+Npoints = 5
 
 def profile_gen(unmod: str, mod: str, ionization: str) -> None:
-    print(unmod, mod, ionization)
+    if rank == 0:
+        print(unmod, mod, ionization, flush=True)
 
     cutoff = 4.0
     TmedVW = 3.0e5
     sig = 0.3
-    redshift = 0.2
+    redshift = 0.0
 
-    radius = np.linspace(9.0, 250, 30)  # kpc
+    radius = np.linspace(9.0, 250, Npoints)  # kpc
 
     unmodified: Optional[unmodified_field] = None
     just_unmod: Optional[unmodified_field] = None
@@ -85,13 +103,14 @@ def profile_gen(unmod: str, mod: str, ionization: str) -> None:
         prs_warm,
         _,
     ) = modified.ProfileGen(radius)
+    modified.save()
 
     _ = just_unmod.ProfileGen(radius)
     n_unmod = just_unmod.ndens
     T_unmod = just_unmod.Temperature
 
     with open(f"figures/mod_prof_{unmod}_{mod}_{ionization}.pickle", "wb") as f:
-        # print(unmodified.Halo.r200 * unmodified.Halo.UNIT_LENGTH / kpc)
+        # print(unmodified.Halo.r200 * unmodified.Halo.UNIT_LENGTH / kpc, flush=True)
         data = {
             "radius": radius,
             "rvir": unmodified.Halo.r200 * unmodified.Halo.UNIT_LENGTH / kpc,

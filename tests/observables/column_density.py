@@ -25,7 +25,7 @@ from misc.template import unmodified_field, modified_field
 def profile_gen(unmod: str, mod: str, ionization: str) -> None:
     print(unmod, mod, ionization)
 
-    cutoff = 6.0
+    cutoff = 4.0  # Mukesh
     TmedVW = 3.0e5
     sig = 0.3
     redshift = 0.2
@@ -70,7 +70,7 @@ def profile_gen(unmod: str, mod: str, ionization: str) -> None:
 
     column = ion_column(modified)
 
-    ions = ["OVI", "NV", "OVII", "OVIII"]
+    ions = ["OVII", "OVIII"] # "MgII", "HI", "OVI", "NV", 
 
     print("Evaluating Column densities...")
 
@@ -81,6 +81,7 @@ def profile_gen(unmod: str, mod: str, ionization: str) -> None:
 
     for ion in ions:
         print(ion)
+        # Calculation starts here
         column_density = column.gen_column(b, element=ion)
 
         with open(f"figures/N_{ion}_{unmod}_{mod}_{ionization}.pickle", "wb") as f:
@@ -94,8 +95,8 @@ def profile_gen(unmod: str, mod: str, ionization: str) -> None:
 
 if __name__ == "__main__":
     unmod = ["isoth", "isent"]
-    mod = ["isochor", "isobar"]
-    ionization = ["PIE", "CIE"]
+    mod = ["isochor",]# "isobar"]
+    ionization = ["PIE",] # "CIE"]
 
     for condition in product(unmod, mod, ionization):
         profile_gen(*condition)

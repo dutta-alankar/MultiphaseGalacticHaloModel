@@ -140,6 +140,9 @@ auto/
 .log
 
 # repo specific database files
+*.png
+*.zip
+*.tar.gz
 *.pickle
 *.npy
 *.npz

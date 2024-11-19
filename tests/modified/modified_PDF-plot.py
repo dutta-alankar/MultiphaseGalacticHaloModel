@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import pickle
 from itertools import product
 
+plt.style.use('dark_background')
 ## Plot Styling
 matplotlib.rcParams["xtick.direction"] = "in"
 matplotlib.rcParams["ytick.direction"] = "in"
@@ -103,6 +104,7 @@ def plot_profile(radius, unmod, all_mods, ionization, figure):
                     linewidth=5,
                     zorder=6,
                 )
+            
             ax.semilogy(
                 np.log10(TempDist),
                 gvh,
@@ -121,11 +123,10 @@ def plot_profile(radius, unmod, all_mods, ionization, figure):
                 zorder=7,
             )
 
-
 if __name__ == "__main__":
-    unmod = ["isoth", "isent"]
-    all_mods = ["isochor", "isobar"]
-    ionization = ["PIE", "CIE"]
+    unmod = ["isoth",]# "isent"]
+    all_mods = ["isochor",]# "isobar"]
+    ionization = ["PIE",]# "CIE"]
 
     for condition in product(unmod, ionization):
         radius = 20.0  # 200.0 if unmod == "isoth" else 20.0  # kpc

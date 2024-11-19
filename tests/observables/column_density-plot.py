@@ -10,9 +10,14 @@ import matplotlib.pyplot as plt
 import pickle
 import matplotlib
 import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
 from matplotlib.legend_handler import HandlerTuple
 from itertools import product
 from parse_observation import observedColDens
+import sys
+
+sys.path.append("../..")
+from obs_data import parse_cgm2, parse_magiicat, parse_cubs
 
 ## Plot Styling
 matplotlib.rcParams["xtick.direction"] = "in"
@@ -47,7 +52,7 @@ plt.rcParams["font.size"] = 28
 matplotlib.rcParams["legend.handlelength"] = 2
 # matplotlib.rcParams["figure.dpi"] = 200
 matplotlib.rcParams["axes.axisbelow"] = True
-PvsC = True
+PvsC = False
 
 
 def plot_column_density(unmod, mod, ion, alpha=0.5):
@@ -66,13 +71,29 @@ def plot_column_density(unmod, mod, ion, alpha=0.5):
             data = pickle.load(data_file)
             impact = data["impact"]
             column_density = data[f"N_{ion}"]
+            
+            print(unmod)
+            print(mod)
+            print(ionization)
+            print(f"{ion} max :", "{:e}".format(max(column_density)))
+            print(f"{ion} min :", "{:e}".format(column_density[-2]))
+            
             rCGM = data["rCGM"]
+            unmod_file = f"../unmodified/cdens_profile-{''.join(element.split())}-unmod_{unmod}_{ionization}.txt"
             if ionization == "PIE":
                 plt.loglog(
-                    np.array(impact) / rCGM,
+                    np.array(impact) / (rCGM/1.1),
                     column_density,
                     linestyle="-" if mod == "isochor" else ":",
                     alpha=1.0,
+                    color="salmon" if unmod == "isoth" else "cadetblue",
+                )
+                unmod_model = np.loadtxt(unmod_file)
+                plt.loglog(
+                    unmod_model[:,0],
+                    unmod_model[:,1],
+                    linestyle=(8, (10, 3)),
+                    alpha=0.5,
                     color="salmon" if unmod == "isoth" else "cadetblue",
                 )
             else:
@@ -81,6 +102,14 @@ def plot_column_density(unmod, mod, ion, alpha=0.5):
                     column_density,
                     linestyle="-" if mod == "isochor" else ":",
                     alpha=alpha,
+                    color="salmon" if unmod == "isoth" else "cadetblue",
+                )
+                unmod_model = np.loadtxt(unmod_file)
+                plt.loglog(
+                    unmod_model[:,0],
+                    unmod_model[:,1],
+                    linestyle=(8, (10, 3)),
+                    alpha=0.5,
                     color="salmon" if unmod == "isoth" else "cadetblue",
                 )
 
@@ -92,7 +121,7 @@ def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
         color="black",
         linestyle="-",
         linewidth=4.0,
-        label="isochor",
+        label="isochoric redistribution",
     )
     line_ib = matplotlib.lines.Line2D(
         [0],
@@ -100,7 +129,15 @@ def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
         color="black",
         linestyle=":",
         linewidth=4.0,
-        label="isobar",
+        label="isobaric redistribution",
+    )
+    line_unmod = matplotlib.lines.Line2D(
+        [0],
+        [0],
+        color="black",
+        linestyle=(8, (10, 3)),
+        linewidth=4.0,
+        label="unmodified profile",
     )
     if PvsC:
         type_pos = (0.06, 0.19) if obs_handles is not None else (0.06, 0.12)
@@ -114,11 +151,11 @@ def make_legend(ax, obs_handles=None, obs_labels=None, alpha=0.5):
         shadow=False,
         fancybox=False,
         bbox_to_anchor=type_pos,
-        ncol=2,
+        ncol=1,
         fontsize=18,
-        handles=[line_ic, line_ib],
-        title="Modification type",
-        title_fontsize=20,
+        handles=[line_unmod, line_ic, line_ib],
+        # title="Modification",
+        # title_fontsize=20,
     )
     legend_header.get_frame().set_edgecolor(None)
     legend_header.get_frame().set_linewidth(0.0)
@@ -262,6 +299,12 @@ if __name__ == "__main__":
         coldens_detect,
         e_coldens_detect,
     ) = observation.col_density_gen(element=element)
+    
+    # print("Debug: ", 10**coldens_min)
+    # print("Debug: ", 10**coldens_max)
+    # print("{:e}".format(max(10**coldens_detect)))
+    # print("{:e}".format(min(10**coldens_detect)))
+    
     if len(e_coldens_detect != 0):
         yerr = np.log(10) * e_coldens_detect * 10.0**coldens_detect
         plt.errorbar(
@@ -291,44 +334,147 @@ if __name__ == "__main__":
         )
         obs_handles, obs_labels = plt.gca().get_legend_handles_labels()
         make_legend(plt.gca(), obs_handles[-3:], obs_labels[-3:], alpha=alpha)
+        # CGM^2 obs
+        impact_cgm2, col_dens_cgm2, col_dens_err_cgm2 = parse_cgm2.parse_col_dens_cgm2()
+        condition = np.logical_and(col_dens_err_cgm2==-1, impact_cgm2<1.2)
+        plt.plot(
+            impact_cgm2[condition],
+            10.0**(col_dens_cgm2[condition]),
+            "v",
+            color="black",
+            markersize=10,
+            markerfacecolor="None",
+        )
+        condition = np.logical_and(col_dens_err_cgm2!=-1, impact_cgm2<1.2)
+        plt.plot(
+            impact_cgm2[condition],
+            10.0**(col_dens_cgm2[condition]),
+            "o",
+            color="black",
+            markersize=10,
+            markerfacecolor="None",
+        )
+        impact_cubs, col_dens_cubs, col_dens_err_cubs = parse_cubs.parse_col_dens_cubs("OVI")
+        condition1 = np.logical_and(col_dens_err_cubs[0,:]!=-1, col_dens_err_cubs[0,:]!=1)
+        condition2 = np.logical_and(col_dens_err_cubs[1,:]!=-1, col_dens_err_cubs[1,:]!=1)
+        condition3 = col_dens_cubs > 0.
+        condition4 = np.logical_and(col_dens_err_cubs[0,:]<=0.4, col_dens_err_cubs[1,:]<=0.4)
+        condition5 = impact_cubs < 1.2
+        condition = np.logical_and(condition1, condition2)
+        condition = np.logical_and(condition,  condition3)
+        condition = np.logical_and(condition,  condition4)
+        condition = np.logical_and(condition,  condition5)
+        yerr = np.log(10) * np.vstack( (col_dens_err_cubs[0,:][condition], col_dens_err_cubs[1,:][condition]) ) \
+                              * 10.0**np.vstack( (col_dens_cubs[condition], col_dens_cubs[condition]) )
+        ebar = plt.errorbar(
+            impact_cubs[condition],
+            10.0**col_dens_cubs[condition],
+            yerr=yerr,
+            fmt="o",
+            color="gray",
+            # label=r"$\rm N_{%s, obs}$" % ("".join(element.split()),),
+            markersize=10,
+            # markerfacecolor="None",
+            markeredgecolor = "black",
+            zorder=200,
+             # hatch="/",
+        )
+        ebar[2][0].set_path_effects([path_effects.withStroke(linewidth=6, foreground='black', capstyle="round"),
+                                        path_effects.Normal()])
+        plt.plot(
+            impact_cubs[np.logical_not(condition)],
+            10.0**(col_dens_cubs[np.logical_not(condition)]),
+            "v",
+            color="gray",
+            markersize=10,
+            markeredgecolor="black",
+        )
     else:
-        make_legend(plt.gca(), alpha=alpha)
+        if "".join(element.split()) == "OVII":
+            plt.errorbar(
+                np.array([ 116.8 ])/ 200.4, # Mathur+23 Sec 2.1 & 3.1
+                np.array([ 4.9e+15 ]),
+                yerr=np.array([ 1.6e+15 ]),
+                fmt="o",
+                color="black",
+                label=r"Observations",
+                markersize=10,
+            )
+            obs_handles, obs_labels = plt.gca().get_legend_handles_labels()
+            make_legend(plt.gca(), obs_handles[-3:], obs_labels[-3:], alpha=alpha)
+        else:
+            make_legend(plt.gca(), alpha=alpha)
+    if "".join(element.split()) == "OVI":
+        plt.ylim(ymin=1.2e+12, ymax=2.9e+15)
+    if "".join(element.split()) == "NV":
+        plt.ylim(ymin=8.5e+10, ymax=5.5e+14)
 
-    if element == "O VII":
-        # obs
-        NOVII_obs = 15.68
-        NOVII_err = 0.27
-        yerr = np.log(10) * NOVII_err * 10.0**NOVII_obs
+    if "".join(element.split()) == "OVII":
+        # obs Gupta+12 Tab. 2 & end of Sec. 3
+        NOVII_obs_min = 15.82
+        NOVII_obs_max = 16.05
         plt.axhspan(
-            2 * 10.0**NOVII_obs,
-            2 * (10.0**NOVII_obs - yerr),
+            2 * (10.0**NOVII_obs_min),
+            2 * (10.0**NOVII_obs_max),
             color="gray",
             alpha=0.2,
             zorder=0,
         )
-        plt.ylim(ymin=2e13)
-
-    if element == "O VIII":
+        plt.text(0.4, 1.6e+16, "MW estimate", size=22)
+        plt.ylim(ymin=8.5e13, ymax=4.5e+16)
+        # print("{:e}".format(2 * 10.0**NOVII_obs),"{:e}".format( 2 * (10.0**NOVII_obs - yerr)))
+        
+    if "".join(element.split()) == "OVIII":
         # obs
-        NOVII_obs = 15.68
-        NOVII_err = 0.27
-        NOVIII_obs = NOVII_obs - np.log10(4)
-        NOVIII_err = NOVII_err - np.log10(4)
-        yerr = np.log(10) * NOVIII_err * 10.0**NOVIII_obs
+        NOVII_obs_min = 16.22
+        NOVII_obs_max = 16.23
+        EW_OVII_Ka_min  = 9.4
+        EW_OVIII_Ka_min = 1.8 # from same OVII LOS
+        EW_OVII_Ka_max  = 48.3
+        EW_OVIII_Ka_max = 28.8 # from same OVII LOS
+        EW_OVII_Kb_min = 3.8
+        EW_OVIII_Ka_min = 9.5 # from same OVII LOS
+        EW_OVII_Kb_max = 34.2
+        EW_OVIII_Ka_max = 28.8 # from same OVII LOS
+        fOVII_Ka  = 0.696
+        fOVII_Kb  = 0.146
+        fOVIII_Ka = 0.416
+        lamOVII_Ka  = 21.602
+        lamOVII_Kb  = 18.654
+        lamOVIII_Ka = 18.967
+        Kalpha = False
+        if Kalpha:
+            atomic = np.log10(fOVII_Ka/fOVIII_Ka) + 2*np.log10(lamOVII_Ka/lamOVIII_Ka)
+        else:
+            atomic = np.log10(fOVII_Kb/fOVIII_Ka) + 2*np.log10(lamOVII_Kb/lamOVIII_Ka)
+        if Kalpha:
+            NOVIII_obs_min = NOVII_obs_min +  + np.log10(EW_OVIII_Ka_min/EW_OVII_Ka_min)
+            NOVIII_obs_max = NOVII_obs_min + atomic + np.log10(EW_OVIII_Ka_max/EW_OVII_Ka_max)
+        else:
+            NOVIII_obs_min = NOVII_obs_min + atomic + np.log10(EW_OVIII_Ka_min/EW_OVII_Kb_min)
+            NOVIII_obs_max = NOVII_obs_min + atomic + np.log10(EW_OVIII_Ka_max/EW_OVII_Kb_max)
+        # print("%e %e"%(10.**NOVIII_obs_min, 10.**NOVIII_obs_max))
+        # Das+19: Discovery of a Very Hot Phase of the Milky Way Circumgalactic Medium also Tab. 2 FSM 20
+        NOVIII_obs_min = np.min([NOVIII_obs_min, NOVIII_obs_max, np.log10(3.4e+15)])
+        NOVIII_obs_max = np.max([NOVIII_obs_min, NOVIII_obs_max, np.log10(3.4e+15)])
+        # print("%e %e"%(10.**NOVIII_obs_min, 10.**NOVIII_obs_max))
         plt.axhspan(
-            2 * 10.0**NOVIII_obs,
-            2 * (10.0**NOVIII_obs - yerr),
+            2 * (10.**NOVIII_obs_min),
+            2 * (10.**NOVIII_obs_max),
             color="gray",
             alpha=0.2,
             zorder=0,
         )
-        plt.ylim(ymin=2e13)
+        plt.text(0.4, 7.6e+15, "MW estimate", size=22)
+        plt.ylim(ymin=8.5e13, ymax=1.5e+16)
+        # print("{:e}".format(2 * 10.0**NOVIII_obs), "{:e}".format(2 * (10.0**NOVIII_obs - yerr)))
 
     # plt.legend()
-    plt.xlabel(r"Impact parameter [$r_{vir}$]", size=28)
-    plt.ylabel(r"Column density of %s ($cm^{-2}$)" % element, size=28)
+    plt.xlabel(r"Impact parameter b [$r_{\rm vir}$]", size=28)
+    plt.ylabel(r"Column density of %s [$\rm cm^{-2}$]" % ("".join(element.split())), size=28)
     plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
     plt.tick_params(axis="both", which="minor", length=6, width=1, labelsize=22)
-    plt.xlim(xmin=0.05, xmax=1.1)
+    plt.xlim(xmin=0.05, xmax=1.3)
     # plt.ylim(ymin=10**11.7, ymax=10.0**15.3)
-    plt.savefig(f"figures/column_density_{element}.png", transparent=False)
+    plt.savefig(f'figures/column_density_{("".join(element.split()))}.png', transparent=False)
+    plt.close()

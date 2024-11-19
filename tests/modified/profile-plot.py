@@ -8,6 +8,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import pickle
+import sys
+
+sys.path.append("../..")
+from misc.constants import kpc
+sys.path.append("../../submodules/AstroPlasma")
 
 ## Plot Styling
 matplotlib.rcParams["xtick.direction"] = "in"
@@ -45,77 +50,80 @@ matplotlib.rcParams["axes.axisbelow"] = True
 
 
 def plot_profile(unmod, mod, ionization):
-    with open(f"figures/mod_prof_{unmod}_{mod}_{ionization}.pickle", "rb") as data_file:
+    print(unmod, mod, ionization, flush=True)
+    with open(f"mod_{mod}_unmod_{unmod}_ionization_{ionization}.pickle", "rb") as data_file:
         profile = pickle.load(data_file)
-        radius = profile["radius"]
-        r200 = 212  # profile["rvir"]
-        nhot_local = profile["nhot_local"]
-        nhot_global = profile["nhot_global"]
-        nwarm_local = profile["nwarm_local"]
-        nwarm_global = profile["nwarm_global"]
-        n_unmod = profile["n_unmod"]
-        T_unmod = profile["T_unmod"]
+        radius = profile.radius
+        r200 = profile.unmodified.Halo.r200 * profile.unmodified.Halo.UNIT_LENGTH / kpc # 212  # profile["rvir"]
+        nhot_local = profile.nhot_local
+        nhot_global = profile.nhot_global
+        nwarm_local = profile.nwarm_local
+        nwarm_global = profile.nwarm_global
+        n_unmod = profile.unmodified.ndens
+        T_unmod = profile.unmodified.Temperature        
 
-        if unmod == "isoth":
-            plt.title(r"$\gamma = 1$ polytrope", size=20)
-        else:
-            plt.title(r"$\gamma = 5/3$ polytrope", size=20)
+    if unmod == "isoth":
+        plt.title(r"$\gamma = 1$ polytrope", size=30)
+    else:
+        plt.title(r"$\gamma = 5/3$ polytrope", size=30)
 
-        plt.loglog(
+    plt.loglog(
+        radius / r200,
+        n_unmod,
+        linestyle="-.",
+        color="rebeccapurple",
+        alpha=0.5,
+        linewidth=4,
+    )
+
+    plt.loglog(
+        radius / r200,
+        nhot_global,
+        linestyle="-" if mod == "isochor" else ":",
+        color="tab:red",
+    )
+    plt.loglog(
+        radius / r200,
+        nwarm_local,
+        linestyle="-" if mod == "isochor" else ":",
+        color="tab:cyan",
+    )
+
+    plt.loglog(
+        radius / r200,
+        nhot_local,
+        linestyle="-" if mod == "isochor" else ":",
+        color="tab:orange",
+        # linewidth=2,
+    )
+
+    plt.loglog(
+        radius / r200,
+        nwarm_global,
+        linestyle="-" if mod == "isochor" else ":",
+        color="tab:blue",
+        # linewidth=2,
+    )
+
+    if unmod == "isent":
+        axin = plt.gca().inset_axes([0.36, 0.075, 0.3, 0.2])
+        axin.loglog(
             radius / r200,
-            n_unmod,
-            linestyle="-.",
+            T_unmod,
             color="rebeccapurple",
-            alpha=0.5,
+            linestyle="-.",
             linewidth=4,
+            alpha=0.8,
         )
-
-        plt.loglog(
-            radius / r200,
-            nhot_global,
-            linestyle="-" if mod == "isochor" else ":",
-            color="tab:red",
+        axin.tick_params(
+            axis="both", which="major", length=6, width=1.5, labelsize=12
         )
-        plt.loglog(
-            radius / r200,
-            nwarm_local,
-            linestyle="-" if mod == "isochor" else ":",
-            color="tab:cyan",
+        axin.tick_params(
+            axis="both", which="minor", length=4, width=0.5, labelsize=10
         )
-
-        plt.loglog(
-            radius / r200,
-            nhot_local,
-            linestyle="-" if mod == "isochor" else ":",
-            color="tab:orange",
-            # linewidth=2,
-        )
-        plt.loglog(
-            radius / r200,
-            nwarm_global,
-            linestyle="-" if mod == "isochor" else ":",
-            color="tab:blue",
-            # linewidth=2,
-        )
-        if unmod == "isent":
-            axin = plt.gca().inset_axes([0.3, 0.1, 0.3, 0.2])
-            axin.loglog(
-                radius / r200,
-                T_unmod,
-                color="rebeccapurple",
-                linestyle="-.",
-                linewidth=4,
-                alpha=0.8,
-            )
-            axin.tick_params(
-                axis="both", which="major", length=6, width=1.5, labelsize=12
-            )
-            axin.tick_params(
-                axis="both", which="minor", length=4, width=0.5, labelsize=10
-            )
-            axin.set_ylabel(r"Temperature [K]", size=13)
-            axin.set_xlabel(r"$r/r_{vir}$", size=13)
-            # axin.set_ylim(ymin=9e4)
+        axin.set_ylabel(r"Temperature [K]", size=15, labelpad=0.5)
+        axin.set_xlabel(r"${\rm r}/r_{\rm vir}$", size=15, labelpad=-1)
+        # axin.set_ylim(ymin=9e4)
 
 
 def make_legend(ax):
@@ -179,7 +187,7 @@ def make_legend(ax):
         framealpha=0.0,
         shadow=False,
         fancybox=False,
-        bbox_to_anchor=(0.75, 1.072),
+        bbox_to_anchor=(0.77, 1.072) if unmod=="isoth" else (0.79, 1.072),
         # ncol=2,
         fontsize=18,
         handles=[
@@ -207,8 +215,8 @@ plot_profile(unmod=unmod, mod=mod, ionization=ionization)
 
 make_legend(ax)
 
-plt.xlabel(r"$r/r_{vir}$", size=28)
-plt.ylabel(r"Particle number density $(cm^{-3})$", size=28)
+plt.xlabel(r"Radial distance r $[r_{\rm vir}]$", size=28)
+plt.ylabel(r"Particle number density [$\rm cm^{-3}$]", size=28)
 plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
 plt.tick_params(axis="both", which="minor", length=6, width=1, labelsize=22)
 plt.savefig(f"figures/{unmod}_{ionization}.png", transparent=False)
@@ -227,8 +235,8 @@ plot_profile(unmod=unmod, mod=mod, ionization=ionization)
 
 make_legend(ax)
 
-plt.xlabel(r"$\rm{r/r_{vir}}$", size=28)
-plt.ylabel(r"Particle number density $(cm^{-3})$", size=28)
+plt.xlabel(r"Radial distance r $[r_{\rm vir}]$", size=28)
+plt.ylabel(r"Particle number density [$\rm cm^{-3}$]", size=28)
 plt.tick_params(axis="both", which="major", length=10, width=2, labelsize=24)
 plt.tick_params(axis="both", which="minor", length=6, width=1, labelsize=22)
 plt.savefig(f"figures/{unmod}_{ionization}.png", transparent=False)
