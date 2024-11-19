@@ -20,11 +20,13 @@ matplotlib = "^3.7.1"
 colorama = "^0.4.6"
 mypy = "^1.2.0"
 corner = "^2.2.2"
-emcee = {version = "^3.1.4", extras = ["mpi4py"]}
 types-requests = "^2.28.11.17"
 pandas = "^2.0.1"
 joypy = "^0.2.6"
 seaborn = "^0.12.2"
+emcee = "^3.1.4"
+mpi4py = "^3.1.5"
+astropy = "^6.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.3.1"

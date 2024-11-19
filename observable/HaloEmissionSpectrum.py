@@ -9,7 +9,7 @@ import sys
 
 sys.path.append("..")
 sys.path.append("../..")
-sys.path.append("../../submodules/AstroPlasma")
+sys.path.append("../submodules/AstroPlasma")
 import time
 import os
 import numpy as np
@@ -231,7 +231,7 @@ def luminosity_spectrum_gen(redisProf: modified_field) -> np.ndarray:
         fourPiNujNu_hot = np.array(
             [
                 fourPiNujNu(nHhot[i], Temp[i], metallicity[indx], redshift, mode)[:, 1]
-                / energy
+                / energy 
                 for i in range(Temp.shape[0])
             ]
         )
@@ -239,20 +239,20 @@ def luminosity_spectrum_gen(redisProf: modified_field) -> np.ndarray:
         fourPiNujNu_warm = np.array(
             [
                 fourPiNujNu(nHwarm[i], Temp[i], metallicity[indx], redshift, mode)[:, 1]
-                / energy
+                / energy 
                 for i in range(Temp.shape[0])
             ]
         )
 
-        hotInt = (1 - redisProf.fvw[indx]) * np.array(
+        hotInt =  np.array(
             [simpson(fourPiNujNu_hot[:, i] * gvh, xh) for i in range(energy.shape[0])]
-        )  # global density sensitive
+        ) #* (1 - redisProf.fvw[indx])  # global density sensitive
 
-        warmInt = redisProf.fvw[indx] * np.array(
+        warmInt =  np.array(
             [simpson(fourPiNujNu_warm[:, i] * gvw, xw) for i in range(energy.shape[0])]
-        )  # global density sensitive
+        ) #  * redisProf.fvw[indx]  # global density sensitive
 
         # erg/s/keV all solid angles covered
-        luminosityTot += (hotInt + warmInt) * (4 * np.pi) * dr_val * r_val**2
+        luminosityTot += (hotInt + warmInt) * dr_val
 
     return np.vstack((energy, luminosityTot)).T

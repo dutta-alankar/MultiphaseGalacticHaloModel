@@ -80,8 +80,8 @@ class electron_column(ColumnDensity):
         xw = np.log(self.Temp / self.redisProf.TmedVW)
 
         # Global density sensitive. The extra volume fraction factor is due to that
-        hotInt = (1 - self.fvw(r_val)) * np.trapz(neHot * gvh, xh)
-        warmInt = self.fvw(r_val) * np.trapz(neWarm * gvw, xw)
+        hotInt =  np.trapz(neHot * gvh, xh) #* (1 - self.fvw(r_val))
+        warmInt =  np.trapz(neWarm * gvw, xw) #* self.fvw(r_val) 
 
         self.ne[indx] = hotInt + warmInt
 

@@ -21,14 +21,15 @@ def cooling_approx(
     metallicity = np.array(metallicity)
     file_path = os.path.realpath(__file__)
     dir_loc = os.path.split(file_path)[:-1]
-    cooling_data = np.loadtxt(os.path.join(*dir_loc, "cooltable.dat"))
+    # cooling_data = np.loadtxt(os.path.join(*dir_loc, "cooltable.dat"))
+    cooling_data = np.loadtxt(os.path.join(*dir_loc, "./cooltables/cooltable_PIE_Z=1.00.dat"))
     cooling = interp1d(cooling_data[:, 0], cooling_data[:, 1], fill_value="extrapolate")
 
     slope1 = -1 / (np.log10(8.7e3) - np.log10(1.2e4))
-    slope2 = 1 / (np.log10(1.2e4) - np.log10(7e4))
+    slope2 =  1 / (np.log10(1.2e4) - np.log10(7e4))
     slope3 = -1 / (np.log10(2e6) - np.log10(8e7))
     coolcurve = cooling(temperature)
-    factor = np.piecewise(
+    factor = np.piecewise( # how much to scale with met: factor low -> high dependence on met
         temperature,
         [
             temperature < 8.7e3,
@@ -40,8 +41,8 @@ def cooling_approx(
         ],
         [
             lambda x: 0,
-            lambda x: slope1 * (np.log10(x) - np.log10(8.7e3)),
-            lambda x: slope2 * (np.log10(x) - np.log10(1.2e4)) + 1,
+            lambda x: 0, #slope1 * (np.log10(x) - np.log10(8.7e3)),
+            lambda x: 0, #slope2 * (np.log10(x) - np.log10(1.2e4)) + 1,
             lambda x: 0,
             lambda x: slope3 * (np.log10(x) - np.log10(2e6)),
             lambda x: 1,

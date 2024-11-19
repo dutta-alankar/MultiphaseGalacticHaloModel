@@ -41,54 +41,124 @@ matplotlib.rcParams["axes.axisbelow"] = True
 
 halo_id = int(sys.argv[1])
 try:
-    file = h5py.File(f"halo-prop_ID={halo_id}.hdf5", "r")
+    file_hdf = h5py.File(f"halo-prop_ID={halo_id}.hdf5", "r")
 except FileNotFoundError:
     print("File unavailable!")
     sys.exit(1)
 
-vol_pdf, bin_edges = np.histogram(
-    np.log10(file["/Temperature"]),
-    bins=300,
+bins = 500
+
+Group_Pos = np.array(file_hdf["Group_Pos"])
+Group_r200 = np.array(file_hdf["Group_r200"])
+
+position = np.array(file_hdf["/Coordinates"])
+distance = np.sqrt(np.sum(np.array([(position[:,i]-Group_Pos[i])**2 for i in range(position.shape[1])]).T, axis=1))
+
+condition = np.logical_and(np.log10(file_hdf["/Temperature"]) >= 3.99, np.log10(file_hdf["/Temperature"]) <= 7.0)
+condition = np.logical_and(condition, np.logical_and(np.log10(file_hdf["/nH"]) >= -6.0, np.log10(file_hdf["/nH"]) <= -1.5))
+condition = np.logical_and(condition, np.array(file_hdf["/SFR"])<=1.0e-06)
+condition = np.logical_and(condition, distance<=1.1*Group_r200)
+
+counts, xedges, yedges = np.histogram2d(
+    x=np.log10(file_hdf["/nH"])[condition],
+    y=np.log10(file_hdf["/Temperature"])[condition],
+    weights=np.array(file_hdf["/Volume"])[condition],
+    bins=(bins+1, bins),
     density=True,
-    weights=np.array(file["/Volume"]),
+)
+xcenters = 0.5*(xedges[1:]+xedges[:-1])
+ycenters = 0.5*(yedges[1:]+yedges[:-1])
+xxcenters, yycenters = np.meshgrid(xcenters, ycenters)
+print(xcenters.shape, ycenters.shape, counts.shape, xxcenters.shape)
+
+vol_pdf, bin_edges = np.histogram(
+    np.log10(file_hdf["/Temperature"])[condition],
+    bins=bins,
+    density=True,
+    weights=np.array(file_hdf["/Volume"])[condition],
 )
 centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
 
-plt.semilogy(centers, vol_pdf, label="volume")
+vol_pdf = np.sum(counts.T, axis=1)*(xedges[1]-xedges[0])
+print(np.trapz(vol_pdf, ycenters))
+plt.semilogy(ycenters, vol_pdf, label="volume")
+
+counts, xedges, yedges = np.histogram2d(
+    x=np.log10(file_hdf["/nH"])[condition],
+    y=np.log10(file_hdf["/Temperature"])[condition],
+    weights=np.array(file_hdf["/Density"])[condition] * np.array(file_hdf["/Volume"])[condition],
+    bins=(bins+1, bins),
+    density=True,
+)
+xcenters = 0.5*(xedges[1:]+xedges[:-1])
+ycenters = 0.5*(yedges[1:]+yedges[:-1])
+xxcenters, yycenters = np.meshgrid(xcenters, ycenters)
 
 mass_pdf, bin_edges = np.histogram(
-    np.log10(file["/Temperature"]),
-    bins=300,
+    np.log10(file_hdf["/Temperature"])[condition],
+    bins=bins,
     density=True,
-    weights=np.array(file["/NumberDensity"]) * np.array(file["/Volume"]),
+    weights=np.array(file_hdf["/Density"])[condition] * np.array(file_hdf["/Volume"])[condition],
 )
 centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
-plt.semilogy(centers, mass_pdf, label="mass")
+
+mass_pdf = np.sum(counts.T, axis=1)*(xedges[1]-xedges[0])
+print(np.trapz(mass_pdf, ycenters))
+plt.semilogy(ycenters, mass_pdf, label="mass")
+
+
+counts, xedges, yedges = np.histogram2d(
+    x=np.log10(file_hdf["/nH"])[condition],
+    y=np.log10(file_hdf["/Temperature"])[condition],
+    weights=-np.array(file_hdf["/nH"])[condition] ** 2
+    * np.array(file_hdf["/Lambda"])[condition]
+    * np.array(file_hdf["/Volume"])[condition],
+    bins=(bins+1, bins),
+    density=True,
+)
+xcenters = 0.5*(xedges[1:]+xedges[:-1])
+ycenters = 0.5*(yedges[1:]+yedges[:-1])
+xxcenters, yycenters = np.meshgrid(xcenters, ycenters)
 
 emm_pdf, bin_edges = np.histogram(
-    np.log10(file["/Temperature"]),
-    bins=300,
+    np.log10(file_hdf["/Temperature"])[condition],
+    bins=bins,
     density=True,
-    weights=-np.array(file["/nH"]) ** 2
-    * np.array(file["/Lambda"])
-    * np.array(file["/Volume"]),
+    weights=-np.array(file_hdf["/nH"])[condition] ** 2
+    * np.array(file_hdf["/Lambda"])[condition]
+    * np.array(file_hdf["/Volume"])[condition],
 )
 centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
-plt.semilogy(centers, emm_pdf, label="emission")
+
+emm_pdf = np.sum(counts.T, axis=1)*(xedges[1]-xedges[0])
+print(np.trapz(emm_pdf, centers))
+plt.semilogy(ycenters, emm_pdf, label="emission")
+
+den_pdf, bin_edges = np.histogram(
+    np.log10(file_hdf["/Temperature"])[condition],
+    bins=bins,
+    density=True,
+    weights=-np.array(file_hdf["/Density"])[condition],
+)
+
+plt.semilogy(centers, den_pdf, label="density")
+centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+
+print(np.trapz(den_pdf, centers))
+
 
 plt.legend(loc="best")
 plt.ylim(ymin=2e-4)
-plt.xlim(xmin=3.9, xmax=7.6)
+plt.xlim(xmin=3.9, xmax=6.5)
 plt.xlabel(r"Temperature [$K$]")
 plt.ylabel(r"$T \mathscr{P}(T)$")
 os.system("mkdir -p ./figures")
-plt.savefig(f"./figures/halo-fill_ID={sys.argv[1]}.png", transparent=False)
+plt.savefig(f"./figures/halo-fill_ID={halo_id}.png", transparent=False)
 # plt.show()
 
 np.savetxt(
     "tng50-pdf-data.txt",
-    np.vstack((centers, vol_pdf, mass_pdf, emm_pdf)).T,
-    header="log10(T[K])			Vol_PDF		Mass_PDF		Diff_emm",
-)
+    np.vstack((centers, vol_pdf, mass_pdf, emm_pdf, den_pdf)).T,
+    header="log10(T[K])  Vol_PDF  Mass_PDF  Diff_emm  Den_pdf")
 
-file.close()
+file_hdf.close()

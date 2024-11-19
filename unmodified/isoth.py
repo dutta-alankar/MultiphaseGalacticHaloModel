@@ -19,9 +19,26 @@ sys.path.append("../submodules/AstroPlasma")
 from astro_plasma import Ionization
 from unmodified.unmodified_profile import UnmodifiedProfile
 
+_mpi = True
+
+if _mpi:
+    from mpi4py import MPI
+
+    ## start parallel programming ---------------------------------------- #
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+
+    comm.Barrier()
+    # t_start = MPI.Wtime()
+else:
+    rank = 0
+    size = 1
+
 
 @dataclass
 class IsothermalUnmodified(UnmodifiedProfile):
+    _type: str = "isoth"
     # Thot is mass wighted average temperature in FM17 (not median Temperature!)
     # P0Tot is in units of kB K cm^-3
     THot: float = 1.43e6
@@ -47,6 +64,7 @@ class IsothermalUnmodified(UnmodifiedProfile):
         self.prsTot: Optional[np.ndarray] = None
         self.nH: Optional[np.ndarray] = None
         self.mu: Optional[np.ndarray] = None
+        self.unmod_filename: str = f"unmod_{self._type}_ionization_{self.ionization}.pickle"
 
     def ProfileGen(
         self: "IsothermalUnmodified", radius_: Union[float, int, list, np.ndarray]
@@ -89,7 +107,7 @@ class IsothermalUnmodified(UnmodifiedProfile):
         )  # guess nH with a guess mu
         nH = np.zeros_like(nH_guess)
         mu = Ionization.interpolate_mu
-        for i in range(self.radius.shape[0]):
+        for i in range(rank, self.radius.shape[0], size):
 
             def transcendental(LognH):
                 return (
@@ -109,19 +127,29 @@ class IsothermalUnmodified(UnmodifiedProfile):
                 )
 
             nH[i] = 10.0 ** np.array([root(transcendental, np.log10(nH_guess[i])).x[0]])
-
-        mu = np.array(
-            [
-                mu(
+        if _mpi:
+            comm.Barrier()
+            # use MPI to get the totals
+            _tmp = np.zeros_like(nH)
+            comm.Allreduce([nH, MPI.DOUBLE], [_tmp, MPI.DOUBLE], op=MPI.SUM)
+            nH = np.copy(_tmp)
+        mu_vals = np.zeros_like(nH_guess)
+        for i in range(rank, self.radius.shape[0], size):
+            mu_vals[i] = mu(
                     nH[i],
                     self.THot,
                     self.metallicity[i],
                     self.redshift,
                     self.ionization,
                 )
-                for i in range(self.radius.shape[0])
-            ]
-        )
+        if _mpi:
+            comm.Barrier()
+            # use MPI to get the totals
+            _tmp = np.zeros_like(nH)
+            comm.Allreduce([mu_vals, MPI.DOUBLE], [_tmp, MPI.DOUBLE], op=MPI.SUM)
+            mu_vals = np.copy(_tmp)
+        mu = np.copy(mu_vals)
+
         rho = ndens * mu * mp  # Gas density only includes thermal component
         self.Temperature = self.THot * np.ones_like(rho)
         self.rho = rho

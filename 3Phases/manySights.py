@@ -112,7 +112,7 @@ density = interp1d(
     fill_value="extrapolate",
 )  # CGS
 
-nIon_hot = nIon(nH_hot, THotM, met_avg, redshift, mode, element=element)
+nIon_hot = nIon(nH_hot, THotM, met_avg, redshift, mode, element=element)  #getting number density of the element/ion from astroplasma
 
 print("Hot phase calculation complete!")
 
@@ -193,16 +193,17 @@ def intersect_clouds(all_clouds, cloud_size, los, rCGM):
 r0 = unmodified.Halo.r0 * unmodified.Halo.UNIT_LENGTH / kpc  # kpc
 rCGM = 1.1 * unmodified.Halo.r200 * unmodified.Halo.UNIT_LENGTH / kpc  # kpc
 
-fvh = 0.939
+fvh = 0.936
 fvw = 0.060
 fvc = 1 - (fvh + fvw)
 
 # ----------- These are the free parameters -------------
-n_warm = int(0)
-n_cold = int(1e4)
 
-r_warm = rCGM * (fvw / n_warm) ** (1.0 / 3) if n_warm > 0 else np.inf
-r_cold = rCGM * (fvc / n_cold) ** (1.0 / 3) if n_cold > 0 else np.inf
+n_warm = int(0)     # set number of warm clouds
+n_cold = int(100000)   # set number of cold clouds
+
+r_warm = rCGM * (fvw / n_warm) ** (1.0 / 3) if n_warm > 0 else np.inf      # radius of warm cloud
+r_cold = rCGM * (fvc / n_cold) ** (1.0 / 3) if n_cold > 0 else np.inf      # radius of cold cloud
 
 if n_warm > 0:
     print(f"Warm cloud size {r_warm*1e3:.1f} pc")
@@ -214,14 +215,14 @@ def _populate_clouds(n_clouds, r_cloud):
     cloud_coordinates = np.random.uniform(-rCGM + r_cloud, rCGM - r_cloud, 3 * n_clouds)
     cl_pos = np.array(
         [
-            cloud_coordinates[:n_clouds],
-            cloud_coordinates[n_clouds : 2 * n_clouds],
-            cloud_coordinates[2 * n_clouds :],
+            cloud_coordinates[:n_clouds],                    # x coordinate
+            cloud_coordinates[n_clouds : 2 * n_clouds],      # y coordinate
+            cloud_coordinates[2 * n_clouds :],               # z coordinate
         ]
     ).T
-    distance = np.sqrt(np.sum(cl_pos**2, axis=1))
+    distance = np.sqrt(np.sum(cl_pos**2, axis=1))            # distance of the clouds
     condition = np.logical_not(
-        np.logical_and(distance >= r0 + r_cloud, distance <= rCGM - r_cloud)
+        np.logical_and(distance >= r0 + r_cloud, distance <= rCGM - r_cloud)     # clouds within the radius of the solar radius (can be improved further)
     )
     while np.count_nonzero(condition) != 0:
         indx = np.where(condition)[0]
@@ -258,7 +259,8 @@ if n_cold > 0:
     r_cloud.append(r_cold)
     T_cloud.append(TColdM)
 
-distance_cloud = [np.sqrt(np.sum(pos**2, axis=1)) for pos in pos_cloud]
+
+distance_cloud = [np.sqrt(np.sum(pos**2, axis=1)) for pos in pos_cloud]     # is it needed with for loop? can be done as done previously
 
 met_cloud = [metallicity(distance) for distance in distance_cloud]
 
@@ -338,12 +340,12 @@ clouds = [
     ]
     for cloud_type, distance in enumerate(distance_cloud)
 ]
+
 print("Cloud populating complete!")
 
 phi = np.linspace(0, 2 * np.pi, 200)
 impact = np.linspace(r0, rCGM - r0, 100)
 intersect_count = np.zeros((len(n_cloud), impact.shape[0], phi.shape[0]))
-
 
 def generate_column(tup):
     i, j = tup

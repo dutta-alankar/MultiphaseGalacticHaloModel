@@ -7,6 +7,7 @@ Created on Tue Aug 30 12:15:09 2022
 
 from scipy.special import erf
 import numpy as np
+import pathlib
 from typing import Protocol, Optional, Tuple
 from dataclasses import dataclass
 from modified.redistribution import Redistribution
@@ -20,9 +21,13 @@ class unmodified_field(Protocol):
 
 @dataclass
 class IsochorCoolRedistribution(Redistribution):
+    _type: str = "isochor"
+
     def __post_init__(self: "IsochorCoolRedistribution") -> None:
         super().__post_init__()
         self.isobaric: int = 0
+        self.mod_filename: str = f"mod_{self._type}_unmod_{self.unmodified._type}_ionization_{self.ionization}.pickle"
+        self.load_mod: bool = pathlib.Path(self.mod_filename).is_file()
 
     def _required_additional_props(self: "IsochorCoolRedistribution") -> None:
         self.redisType: str = "isochor"

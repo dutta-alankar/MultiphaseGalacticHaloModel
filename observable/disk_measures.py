@@ -20,6 +20,28 @@ import observable.CoordinateTrans as transform
 import observable.maps as maps
 from astro_plasma import Ionization
 
+@dataclass
+class Disk_profile:
+    nH0: float = 4.8e-3  # cm^-3
+    R0: float = 8.5  # kpc
+    z0: float = 3.0  # kpc
+    metallicity: float = 1.0
+    redshift: float = 0.0
+    mode: str = "PIE"
+
+    def __post_init__(self: "Disk_profile") -> None:
+        self.TDisk: float = 1.5e6  # K
+        self.nH: Callable = lambda R, z: self.nH0 * np.exp(
+            -(R / self.R0 + np.fabs(z) / self.z0)
+        )
+        self.nH_block: Callable = lambda R, z: np.piecewise( R, [np.logical_and(R<self.R0, np.abs(z)<0.5*self.z0),], [self.nH0, 0.] )
+        num_dens = Ionization.interpolate_num_dens
+        self.ne0: float = num_dens(
+            self.nH0, self.TDisk, self.metallicity, self.redshift, self.mode, "electron"
+        )
+        self.ni0: float = num_dens(
+            self.nH0, self.TDisk, self.metallicity, self.redshift, self.mode, "ion"
+        )
 
 class MeasuresDisk(maps.MapInit, ABC):
     def __init__(self: "MeasuresDisk", rvir):
@@ -29,6 +51,21 @@ class MeasuresDisk(maps.MapInit, ABC):
     @abstractmethod
     def _measure_field(self: "MeasuresDisk") -> Callable:
         pass
+
+    def set_disk(self: "MeasuresDisk", 
+                 nH0: float = 4.8e-3,  # cm^-3
+                 R0: float = 8.5,  # kpc
+                 z0: float = 3.0,  # kpc
+                 metallicity: float = 1.0,
+                 redshift: float = 0.0,
+                 mode: str = "PIE",
+                 ) -> None:
+        self.disk = Disk_profile(nH0=nH0, 
+                                 R0=R0, 
+                                 z0=z0,
+                                 metallicity=metallicity, 
+                                 redshift=redshift, 
+                                 mode=mode)
 
     def make_map(
         self: "MeasuresDisk",
@@ -45,8 +82,9 @@ class MeasuresDisk(maps.MapInit, ABC):
 
                 for i in range(field.shape[0]):
                     for j in range(field.shape[1]):
+                        # 1.0e-3 is needed to resolve the disk
                         LOSsample = np.logspace(
-                            np.log10(1e-3 * self.integrateTill[i, j]),
+                            np.log10(1.0e-3 * self.integrateTill[i, j]),
                             np.log10(self.integrateTill[i, j]),
                             100,
                         )
@@ -70,11 +108,11 @@ class MeasuresDisk(maps.MapInit, ABC):
                         )
                 progBar.end()
             else:
-
                 def _calc(tup):
                     l_val, b_val, _integrateTill = tup
+                    # print(l_val, b_val, _integrateTill)
                     LOSsample = np.logspace(
-                        np.log10(1e-3 * _integrateTill), np.log10(_integrateTill), 100
+                        np.log10(1.0e-3 * _integrateTill), np.log10(_integrateTill), 100
                     )
                     radius, phi, theta = transform.toGalC(l_val, b_val, LOSsample)
                     height = np.abs(radius * np.cos(np.deg2rad(theta)))
@@ -96,7 +134,7 @@ class MeasuresDisk(maps.MapInit, ABC):
                 field = np.array((*map(_calc, tup),)).reshape(l.shape)  # CGS kpc
         else:
             LOSsample = np.logspace(
-                np.log10(1e-3 * self.integrateTill), np.log10(self.integrateTill), 100
+                np.log10(1.0e-3 * self.integrateTill), np.log10(self.integrateTill), 100
             )
             radius, phi, theta = transform.toGalC(l, b, LOSsample)
             height = np.abs(radius * np.cos(np.deg2rad(theta)))
@@ -111,39 +149,17 @@ class MeasuresDisk(maps.MapInit, ABC):
         return field
 
 
-@dataclass
-class Disk_profile:
-    nH0: float = 1.2e-2  # cm^-3 3.8e-3 # cm^-3
-    R0: float = 7.0  # kpc
-    z0: float = 2.7  # kpc
-    metallicity: float = 1.0
-    redshift: float = 0.001
-    mode: str = "PIE"
-
-    def __post_init__(self: "Disk_profile") -> None:
-        self.TDisk: float = 4.25e3 if self.mode == "PIE" else 1.63e4  # K
-        self.nH: Callable = lambda R, z: self.nH0 * np.exp(
-            -(R / self.R0 + np.fabs(z) / self.z0)
-        )
-        num_dens = Ionization.interpolate_num_dens
-        self.ne0: float = num_dens(
-            self.nH0, self.TDisk, self.metallicity, self.redshift, self.mode, "electron"
-        )
-        self.ni0: float = num_dens(
-            self.nH0, self.TDisk, self.metallicity, self.redshift, self.mode, "ion"
-        )
-
 
 class DiskDM(MeasuresDisk):
     def _measure_field(self: "DiskDM") -> Callable:
-        disk = Disk_profile()
+        disk = self.disk if hasattr(self, "disk") else Disk_profile()
         ne_prof = lambda R, z: (disk.ne0 / disk.nH0) * disk.nH(R, z)
         return ne_prof
 
 
 class DiskEM(MeasuresDisk):
     def _measure_field(self: "DiskEM") -> Callable:
-        disk = Disk_profile()
-        ni_prof = lambda R, z: (disk.ni0 / disk.nH0) * disk.nH(R, z)
-        ne_prof = DiskDM(rvir=self.rvir)._measure_field()
-        return lambda R, z: ni_prof(R, z) * ne_prof(R, z)
+        disk = self.disk if hasattr(self, "disk") else Disk_profile()
+        nH_prof = lambda R, z:  disk.nH(R, z)
+        ne_prof = lambda R, z: (disk.ne0 / disk.nH0) * disk.nH(R, z)
+        return lambda R, z: ne_prof(R, z) * nH_prof(R, z)

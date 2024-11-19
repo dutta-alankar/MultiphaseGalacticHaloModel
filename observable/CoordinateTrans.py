@@ -36,16 +36,14 @@ def toGalC(
         Polar angle in degree wrt Galaxy center.
 
     """
-    L = np.array(l)
-    B = np.array(b)
+    L = np.deg2rad(np.array(l))
+    B = np.deg2rad(np.array(b))
     Distance = np.array(distance)
 
-    phi = np.deg2rad(L)
-    theta = np.pi / 2 - np.deg2rad(B)
     SuntoGC = 8.0  # kpc
-    xgc = Distance * np.sin(theta) * np.cos(phi) - SuntoGC
-    ygc = Distance * np.sin(theta) * np.sin(phi)
-    zgc = Distance * np.cos(theta)
+    xgc = Distance * np.cos(B) * np.cos(L) - SuntoGC
+    ygc = Distance * np.cos(B) * np.sin(L)
+    zgc = Distance * np.sin(B)
 
     radius = np.sqrt(xgc**2 + ygc**2 + zgc**2)
     phi = np.rad2deg(np.arctan2(ygc, xgc))

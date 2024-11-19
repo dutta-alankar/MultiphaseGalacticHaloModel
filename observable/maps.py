@@ -10,7 +10,6 @@ from misc.template import modified_field
 from typing import Union, Optional
 from misc.constants import kpc
 
-
 class MapInit(object):
     def __init__(
         self: "MapInit",
@@ -45,21 +44,21 @@ class MapInit(object):
 
         root1 = np.abs(
             SuntoGC
-            * costheta
-            * (1 + np.sqrt(1 + (R200**2 - SuntoGC**2) / (SuntoGC * costheta) ** 2))
+            * costheta  
+            - np.sqrt(R200**2 - SuntoGC**2 * (1 - costheta**2))
         )
         root2 = np.abs(
             SuntoGC
-            * costheta
-            * (1 - np.sqrt(1 + (R200**2 - SuntoGC**2) / (SuntoGC * costheta) ** 2))
+            * costheta 
+            + np.sqrt(R200**2 - SuntoGC**2 * (1 - costheta**2))
         )
-        root_large = np.select([root1 > root2, root1 < root2], [root1, root2])
-        root_small = np.select([root1 < root2, root1 > root2], [root1, root2])
+        root_large = np.select([root1 > root2, root1 <= root2], [root1, root2])
+        root_small = np.select([root1 < root2, root1 >= root2], [root1, root2])
         # True if both roots are real
         # real  = np.logical_not( np.logical_and(np.iscomplex(root1), np.iscomplex(root2)) )
-        B_cond = np.logical_and(B > -90, B < 90)
+        B_cond = np.logical_and(B >= -90, B <= 90)
         L_cond = np.logical_or(
-            np.logical_and(L > 0, L < 90), np.logical_and(L > 270, L < 360)
+            np.logical_and(L >= 0, L <= 90), np.logical_and(L >= 270, L <= 360)
         )
         large_root_select = np.logical_and(B_cond, L_cond)
 

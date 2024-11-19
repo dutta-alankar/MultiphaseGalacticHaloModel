@@ -21,6 +21,8 @@ from observable.internal_interpolation import _interpolate_internal_variables
 
 
 class ColumnDensity(ABC, _interpolate_internal_variables):
+    _verbose: bool = True
+
     def __init__(self: "ColumnDensity", redisProf: modified_field) -> None:
         self.redisProf = redisProf
         self.nHhot: Optional[np.ndarray] = None
@@ -40,7 +42,8 @@ class ColumnDensity(ABC, _interpolate_internal_variables):
         redshift = self.redisProf.redshift
 
         rend = self._interpolate_vars()
-
+        if self._verbose:
+            print("Interpolation complete!")
         if self.radius is None:
             self.radius = np.logspace(np.log10(5.0), np.log10(rend), 80)  # kpc
         if self.nHhot is None or self.nHwarm is None:
@@ -54,6 +57,8 @@ class ColumnDensity(ABC, _interpolate_internal_variables):
             )
             self.nHwarm = np.zeros_like(self.nHhot)
 
+            if self._verbose:
+                print("Calculating nH hot/warm")
             mu = Ionization.interpolate_mu
             for indx, r_val in enumerate(self.radius):
                 # Approximation is nH T is also constant like n T which is used as guess
@@ -107,6 +112,8 @@ class ColumnDensity(ABC, _interpolate_internal_variables):
                     ]
                 )
 
+        if self._verbose:
+            print("Interpolating additional fields")
         for indx, r_val in enumerate(self.radius):
             # This function must be called after the previous two commands
             self._additional_fields(indx, r_val)
@@ -134,6 +141,8 @@ class ColumnDensity(ABC, _interpolate_internal_variables):
             b_ = np.array([b_])
         coldens = np.zeros_like(b_)
         self._setup_profile()
+        if self._verbose:
+            print("Profile setup complete!")
 
         field_func = eval(f"self.{self.field}")
         epsilon = 1e-6
@@ -148,6 +157,8 @@ class ColumnDensity(ABC, _interpolate_internal_variables):
                     / kpc,
                 )[0]
             )  # kpc cm^-3
+        if self._verbose:
+            print("Column density calculation complete!")
         # Convert to cm^-2
         if len(b_) == 1:
             return coldens[0] * kpc

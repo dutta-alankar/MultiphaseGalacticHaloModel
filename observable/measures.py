@@ -49,9 +49,18 @@ class Measure(maps.MapInit, _interpolate_internal_variables, ABC):
             gvw: np.ndarray,
             xw: np.ndarray,
             part_types: list[str],
+            weights: Union[None,list[np.ndarray]] = None,
         ) -> float:
-            quanHot = np.zeros((len(part_types), self.Temp.shape[0]))
+            extra = 1
+            if weights is None:
+               extra = 0    
+            quanHot = np.zeros((len(part_types)+extra, self.Temp.shape[0]))
             quanWarm = np.zeros_like(quanHot)
+            if extra !=0:
+                #print(weights[0])
+                #print(weights[1])
+                quanHot[-1,:] = weights[0]
+                quanWarm[-1,:] = weights[1]
             for indx, part_type in enumerate(part_types):
                 tup = (
                     *zip(
@@ -95,12 +104,10 @@ class Measure(maps.MapInit, _interpolate_internal_variables, ABC):
                     self.Temp.shape
                 )
 
-            hotInt = (1 - self.fvw(r_val)) * np.trapz(
-                np.product(quanHot, axis=0) * gvh, xh
-            )
+            hotInt =  np.trapz(np.product(quanHot, axis=0) * gvh, xh) #*(1 - self.fvw(r_val)) 
             # global density sensitive, extra filling factor for global
 
-            warmInt = self.fvw(r_val) * np.trapz(np.product(quanWarm, axis=0) * gvw, xw)
+            warmInt =  np.trapz(np.product(quanWarm, axis=0) * gvw, xw) #*self.fvw(r_val) 
 
             return hotInt + warmInt
 
@@ -167,7 +174,8 @@ class Measure(maps.MapInit, _interpolate_internal_variables, ABC):
                     for i in range(self.Temp.shape[0])
                 ]
             )
-
+           # print(nHwarm.shape)
+           # print(self.Temp.shape)
             ne = _weighted_avg_quantity(
                 r_val,
                 nHhot,
@@ -180,15 +188,28 @@ class Measure(maps.MapInit, _interpolate_internal_variables, ABC):
                     "electron",
                 ],
             )
-            neni = _weighted_avg_quantity(
-                r_val, nHhot, nHwarm, gvh, xh, gvw, xw, ["electron", "ion"]
+            nenH = _weighted_avg_quantity(
+                r_val,
+                nHhot,
+                nHwarm,
+                gvh,
+                xh,
+                gvw,
+                xw,
+                [
+                    "electron",
+                ],
+                [
+                    nHhot,
+                    nHwarm,
+                ],
             )
 
-            return np.array([ne, neni])
+            return np.array([ne, nenH])
 
         _quan = np.array([*map(_calc, np.array(distance))])
-        ne, neni = _quan[:, 0], _quan[:, 1]
-        return (ne, neni)
+        ne, nenH = _quan[:, 0], _quan[:, 1]
+        return (ne, nenH)
 
     @abstractmethod
     def observable_quantity(
@@ -220,14 +241,14 @@ class Measure(maps.MapInit, _interpolate_internal_variables, ABC):
 
         distance = np.logspace(np.log10(5.0), 1.01 * np.log10(rend), 20)  # kpc
         print("Generating profiles ...")
-        ne_val, neni_val = self._generate_measurable(distance)
+        ne_val, nenH_val = self._generate_measurable(distance)
         print("Complete!")
 
         ne_prof = interp1d(
             np.log10(distance), np.log10(ne_val), fill_value="extrapolate"
         )
-        neni_prof = interp1d(
-            np.log10(distance), np.log10(neni_val), fill_value="extrapolate"
+        nenH_prof = interp1d(
+            np.log10(distance), np.log10(nenH_val), fill_value="extrapolate"
         )
 
         if isinstance(l, np.ndarray):
@@ -237,7 +258,7 @@ class Measure(maps.MapInit, _interpolate_internal_variables, ABC):
                 for i in range(self.observable.shape[0]):
                     for j in range(self.observable.shape[1]):
                         LOSsample = np.logspace(
-                            np.log10(1e-3 * self.integrateTill[i, j]),
+                            np.log10(1.0e-3 * self.integrateTill[i, j]),
                             np.log10(self.integrateTill[i, j]),
                             100,
                         )  # points on the LOS
@@ -248,7 +269,7 @@ class Measure(maps.MapInit, _interpolate_internal_variables, ABC):
                         radius = np.abs(radius * np.sin(np.deg2rad(theta)))
                         distance = np.sqrt(radius**2 + height**2)
                         observable = self.observable_quantity(
-                            [ne_prof, neni_prof], distance, LOSsample
+                            [ne_prof, nenH_prof], distance, LOSsample
                         )
                         # np.trapz( np.nan_to_num(10.**ne_prof(np.log10(distance))) , LOSsample)
                         self.observable[i, j] = observable  # cm^-3 kpc
@@ -264,14 +285,14 @@ class Measure(maps.MapInit, _interpolate_internal_variables, ABC):
                 def _calc(tup):
                     l_val, b_val, integrateTill = tup
                     LOSsample = np.logspace(
-                        np.log10(1e-3 * integrateTill), np.log10(integrateTill), 100
+                        np.log10(1.0e-3 * integrateTill), np.log10(integrateTill), 100
                     )
                     radius, phi, theta = transform.toGalC(l_val, b_val, LOSsample)
                     height = np.abs(radius * np.cos(np.deg2rad(theta)))
                     radius = np.abs(radius * np.sin(np.deg2rad(theta)))  # along disk
                     distance = np.sqrt(radius**2 + height**2)
                     observable = self.observable_quantity(
-                        [ne_prof, neni_prof], distance, LOSsample
+                        [ne_prof, nenH_prof], distance, LOSsample
                     )
                     return observable  # cm^-3 kpc
 
@@ -287,14 +308,14 @@ class Measure(maps.MapInit, _interpolate_internal_variables, ABC):
                 )  # cm^-6 kpc
         else:
             LOSsample = np.logspace(
-                np.log10(1e-3 * self.integrateTill), np.log10(self.integrateTill), 100
+                np.log10(1.0e-3 * self.integrateTill), np.log10(self.integrateTill), 100
             )
             radius, phi, theta = transform.toGalC(l, b, LOSsample)
             height = np.abs(radius * np.cos(np.deg2rad(theta)))
             radius = np.abs(radius * np.sin(np.deg2rad(theta)))  # along disk
             distance = np.sqrt(radius**2 + height**2)
             self.observable = self.observable_quantity(
-                [ne_prof, neni_prof], distance, LOSsample
+                [ne_prof, nenH_prof], distance, LOSsample
             )
 
         self.observable = self.post_process_observable(self.observable)

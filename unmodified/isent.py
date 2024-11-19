@@ -19,9 +19,25 @@ sys.path.append("../submodules/AstroPlasma")
 from astro_plasma import Ionization
 from unmodified.unmodified_profile import UnmodifiedProfile
 
+_mpi = True
+
+if _mpi:
+    from mpi4py import MPI
+
+    ## start parallel programming ---------------------------------------- #
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+
+    comm.Barrier()
+    # t_start = MPI.Wtime()
+else:
+    rank = 0
+    size = 1
 
 @dataclass
 class IsentropicUnmodified(UnmodifiedProfile):
+    _type: str = "isent"
     nHrCGM: float = 1.1e-5
     TthrCGM: float = 2.4e5
 
@@ -88,6 +104,7 @@ class IsentropicUnmodified(UnmodifiedProfile):
         self.prsTot: Optional[np.ndarray] = None
         self.nH: Optional[np.ndarray] = None
         self.mu: Optional[np.ndarray] = None
+        self.unmod_filename: str = f"unmod_{self._type}_ionization_{self.ionization}.pickle"
 
     def ProfileGen(
         self: "IsentropicUnmodified", radius_: Union[float, list, np.ndarray]
@@ -135,14 +152,16 @@ class IsentropicUnmodified(UnmodifiedProfile):
         )  # CGS
         rho_guess = np.log10((nH_guess * mH / Xp(self.metallicity)) / self.UNIT_DENSITY)
 
-        rho = 10.0 ** (
-            np.array(
-                [
-                    root(_transcendental, rho_guess[indx], args=(rad,)).x[0]
-                    for indx, rad in enumerate(self.radius)
-                ]
-            )
-        )  # code
+        rho = np.zeros_like(rho_guess)
+        for indx in range(rank, self.radius.shape[0], size):
+            rad = self.radius[indx]
+            rho[indx] = 10.0 ** (root(_transcendental, rho_guess[indx], args=(rad,)).x[0]) # code
+        if _mpi:
+            comm.Barrier()
+            # use MPI to get the totals
+            _tmp = np.zeros_like(rho)
+            comm.Allreduce([rho, MPI.DOUBLE], [_tmp, MPI.DOUBLE], op=MPI.SUM)
+            rho = np.copy(_tmp)
 
         self.prsTh = (
             self.KTh
@@ -166,7 +185,8 @@ class IsentropicUnmodified(UnmodifiedProfile):
 
         self.Temperature = np.zeros_like(self.radius)
 
-        for i in range(self.radius.shape[0]):
+
+        for i in range(rank, self.radius.shape[0], size):
 
             def transcendental(LogTemp):
                 return np.log10(
@@ -185,6 +205,12 @@ class IsentropicUnmodified(UnmodifiedProfile):
                 root(transcendental, logT_guess, method="lm", tol=1e-8).x[0]
             )
 
+        if _mpi:
+            comm.Barrier()
+            # use MPI to get the totals
+            _tmp = np.zeros_like(self.radius)
+            comm.Allreduce([self.Temperature, MPI.DOUBLE], [_tmp, MPI.DOUBLE], op=MPI.SUM)
+            self.Temperature = np.copy(_tmp)
         self.mu = self.Temperature / ((self.prsTh / kB) / (self.rho / mp))
         self.ndens = self.rho / (self.mu * mp)
 
